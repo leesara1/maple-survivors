@@ -141,6 +141,14 @@ interface ShockwaveRing {
   maxLife: number;
 }
 
+interface HitBadgeSlot {
+  active: boolean;
+  x: number;
+  y: number;
+  life: number;
+  maxLife: number;
+}
+
 export class GameEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -217,6 +225,7 @@ export class GameEngine {
   private slashes: SlashEffect[] = [];
   private holyPillars: HolyPillar[] = [];
   private shockwaves: ShockwaveRing[] = [];
+  private hitBadges: HitBadgeSlot[] = [];
 
   // Title attract-mode entities
   private titleTime = 0;
@@ -374,6 +383,16 @@ export class GameEngine {
         maxLife: 0.35,
       });
     }
+
+    for (let i = 0; i < 12; i++) {
+      this.hitBadges.push({
+        active: false,
+        x: 0,
+        y: 0,
+        life: 0,
+        maxLife: 0.36,
+      });
+    }
   }
 
   public start(): void {
@@ -502,6 +521,7 @@ export class GameEngine {
     for (let i = 0; i < this.slashes.length; i++) this.slashes[i].active = false;
     for (let i = 0; i < this.holyPillars.length; i++) this.holyPillars[i].active = false;
     for (let i = 0; i < this.shockwaves.length; i++) this.shockwaves[i].active = false;
+    for (let i = 0; i < this.hitBadges.length; i++) this.hitBadges[i].active = false;
 
     // Spawn 2 initial crates nearby so players discover field items early
     this.spawnCrateNearPlayer(260);
@@ -1269,6 +1289,7 @@ export class GameEngine {
     sound.playPlayerHurt();
     this.triggerShake(0.18, 5);
     this.spawnDamageNumber(this.player.x, this.player.y - 24, `-${amount}`, true, false);
+    this.spawnHitBadge(this.player.x, this.player.y - 42);
 
     if (this.player.hp <= 0) {
       this.phase = 'GAME_OVER';
@@ -1394,6 +1415,9 @@ export class GameEngine {
 
     sound.playHit(isCrit);
     this.spawnDamageNumber(m.x, m.y - m.radius - 6, `${dmg}${isCrit ? '!' : ''}`, isCrit, false);
+    if (isCrit) {
+      this.spawnHitBadge(m.x + 12, m.y - m.radius - 22);
+    }
 
     if (m.hp <= 0) {
       this.killMonster(mIdx);
@@ -1856,6 +1880,14 @@ export class GameEngine {
       sw.life -= dt;
       if (sw.life <= 0) sw.active = false;
     }
+
+    for (let i = 0; i < this.hitBadges.length; i++) {
+      const hb = this.hitBadges[i];
+      if (!hb.active) continue;
+      hb.life -= dt;
+      hb.y -= 28 * dt;
+      if (hb.life <= 0) hb.active = false;
+    }
   }
 
   // Helper Spawners
@@ -2031,6 +2063,20 @@ export class GameEngine {
         sw.color = color;
         sw.life = 0.32;
         sw.maxLife = 0.32;
+        return;
+      }
+    }
+  }
+
+  private spawnHitBadge(x: number, y: number): void {
+    for (let i = 0; i < this.hitBadges.length; i++) {
+      const hb = this.hitBadges[i];
+      if (!hb.active) {
+        hb.active = true;
+        hb.x = x;
+        hb.y = y;
+        hb.life = 0.34;
+        hb.maxLife = 0.34;
         return;
       }
     }
@@ -2336,45 +2382,69 @@ export class GameEngine {
       if (!pk.active) continue;
 
       let spr: HTMLCanvasElement;
-      let scale = 2.0;
+      let w = 0;
+      let h = 0;
       switch (pk.kind) {
         case 'exp_small':
           spr = this.sprites.expSmall;
-          scale = 1.7;
+          w = Math.round(spr.width * 1.7);
+          h = Math.round(spr.height * 1.7);
           break;
         case 'exp_medium':
           spr = this.sprites.expMedium;
-          scale = 2.0;
+          w = Math.round(spr.width * 2.0);
+          h = Math.round(spr.height * 2.0);
           break;
         case 'exp_large':
           spr = this.sprites.expLarge;
-          scale = 2.3;
+          w = Math.round(spr.width * 2.3);
+          h = Math.round(spr.height * 2.3);
           break;
-        case 'coin':
-          spr = this.sprites.coin;
-          scale = 2.1;
+        case 'coin': {
+          const mswCoin =
+            pk.value >= 10
+              ? this.sprites.mswMesoBag
+              : pk.value >= 5
+                ? this.sprites.mswMesoGold
+                : pk.value >= 2
+                  ? this.sprites.mswMesoSilver
+                  : this.sprites.mswMesoBronze;
+          if (mswCoin) {
+            spr = mswCoin;
+            const targetH = pk.value >= 10 ? 28 : pk.value >= 5 ? 25 : pk.value >= 2 ? 22 : 20;
+            const aspect = spr.width / Math.max(1, spr.height);
+            h = targetH;
+            w = Math.round(targetH * aspect);
+          } else {
+            spr = this.sprites.coin;
+            w = Math.round(spr.width * 2.1);
+            h = Math.round(spr.height * 2.1);
+          }
           break;
+        }
         case 'potion':
           spr = this.sprites.potion;
-          scale = 2.3;
+          w = Math.round(spr.width * 2.3);
+          h = Math.round(spr.height * 2.3);
           break;
         case 'magnet_all':
           spr = this.sprites.magnetAll;
-          scale = 2.3;
+          w = Math.round(spr.width * 2.3);
+          h = Math.round(spr.height * 2.3);
           break;
         case 'bomb':
           spr = this.sprites.bomb;
-          scale = 2.3;
+          w = Math.round(spr.width * 2.3);
+          h = Math.round(spr.height * 2.3);
           break;
         case 'chest':
           spr = this.sprites.chest;
-          scale = 2.6;
+          w = Math.round(spr.width * 2.6);
+          h = Math.round(spr.height * 2.6);
           break;
       }
 
       const bob = Math.sin(pk.bobPhase) * 2.5 + pk.popZ;
-      const w = Math.round(spr.width * scale);
-      const h = Math.round(spr.height * scale);
 
       if (pk.kind === 'chest') {
         // Golden sparkle ring around Treasure Chest
@@ -2543,6 +2613,21 @@ export class GameEngine {
       const def = CONFIG.WEAPONS.shield;
       const stats = shieldWeapon.evolved ? def.evolvedStats : def.levels[shieldWeapon.level - 1];
       if (shieldWeapon.evolved) {
+        if (this.sprites.mswShieldDome) {
+          const dome = this.sprites.mswShieldDome;
+          const domeSize = stats.area * 2.15;
+          const domeH = Math.round(domeSize * (dome.height / Math.max(1, dome.width)));
+          ctx.save();
+          ctx.globalAlpha = 0.28;
+          ctx.drawImage(
+            dome,
+            Math.round(this.player.x - domeSize / 2),
+            Math.round(this.player.y - domeH / 2 - 4),
+            Math.round(domeSize),
+            domeH
+          );
+          ctx.restore();
+        }
         ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -2727,6 +2812,22 @@ export class GameEngine {
       ctx.fillStyle = dn.isHeal ? '#4ade80' : dn.isCrit ? '#ef4444' : '#fb923c';
       ctx.fillText(dn.text, Math.round(dn.x), Math.round(dn.y));
       ctx.restore();
+    }
+
+    // MSW Maple "HIT!" Pixel Badges on crits & player hits
+    const hitSpr = this.sprites.mswHitBadge;
+    if (hitSpr) {
+      for (let i = 0; i < this.hitBadges.length; i++) {
+        const hb = this.hitBadges[i];
+        if (!hb.active) continue;
+        const alpha = Math.min(1, hb.life / (hb.maxLife * 0.45));
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        const bw = hitSpr.width;
+        const bh = hitSpr.height;
+        ctx.drawImage(hitSpr, Math.round(hb.x - bw / 2), Math.round(hb.y - bh / 2), bw, bh);
+        ctx.restore();
+      }
     }
   }
 

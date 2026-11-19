@@ -622,6 +622,58 @@ export const UPLOADED_HERO_PATH = `${BASE}assets/aistudio/____f2089c1b.png`;
 export const UPLOADED_FISH_PATH = `${BASE}assets/aistudio/________692bfcd6.png`;
 export const HERO_SPRITESHEET_PATH = `${BASE}src/assets/images/tuna_hero_spritesheet_1795066392343.jpg`;
 
+export const MSW_ASSETS = {
+  lvup: `${BASE}assets/msw/lvup.gif`,
+  mesoBronze: `${BASE}assets/msw/meso_bronze.gif`,
+  mesoSilver: `${BASE}assets/msw/meso_silver.gif`,
+  mesoGold: `${BASE}assets/msw/meso_gold.gif`,
+  mesoBag: `${BASE}assets/msw/meso_bag.gif`,
+  hit: `${BASE}assets/msw/hit.png`,
+  shield: `${BASE}assets/msw/shield.gif`,
+  bulb: `${BASE}assets/msw/bulb.gif`,
+  quest: `${BASE}assets/msw/quest.gif`,
+  cursorDefault: `${BASE}assets/msw/cursor_default.png`,
+  cursorPointer: `${BASE}assets/msw/cursor_pointer.png`,
+} as const;
+
+function trimImageToCanvas(img: HTMLImageElement, alphaThreshold = 16): HTMLCanvasElement {
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  const tmp = document.createElement('canvas');
+  tmp.width = sw;
+  tmp.height = sh;
+  const ctx = tmp.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, 0);
+
+  const d = ctx.getImageData(0, 0, sw, sh).data;
+  let minX = sw;
+  let minY = sh;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (d[(y * sw + x) * 4 + 3] > alphaThreshold) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < minX || maxY < minY) return tmp;
+
+  const cw = maxX - minX + 1;
+  const ch = maxY - minY + 1;
+  const out = document.createElement('canvas');
+  out.width = cw;
+  out.height = ch;
+  const octx = out.getContext('2d')!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(tmp, minX, minY, cw, ch, 0, 0, cw, ch);
+  return out;
+}
+
 function isMagentaBg(r: number, g: number, b: number): boolean {
   return r > 155 && b > 155 && g < 125 && r - g > 55 && b - g > 55;
 }
@@ -777,6 +829,12 @@ export interface SpriteBank {
   potion: HTMLCanvasElement;
   magnetAll: HTMLCanvasElement;
   bomb: HTMLCanvasElement;
+  mswMesoBronze: HTMLCanvasElement | null;
+  mswMesoSilver: HTMLCanvasElement | null;
+  mswMesoGold: HTMLCanvasElement | null;
+  mswMesoBag: HTMLCanvasElement | null;
+  mswHitBadge: HTMLCanvasElement | null;
+  mswShieldDome: HTMLCanvasElement | null;
   icons: Record<WeaponId | PassiveId, string>; // data URLs for React UI
 }
 
@@ -829,6 +887,12 @@ export function getSpriteBank(): SpriteBank {
     potion: renderMatrixToCanvas(POTION_MATRIX),
     magnetAll: renderMatrixToCanvas(MAGNET_MATRIX),
     bomb: renderMatrixToCanvas(BOMB_MATRIX),
+    mswMesoBronze: null,
+    mswMesoSilver: null,
+    mswMesoGold: null,
+    mswMesoBag: null,
+    mswHitBadge: null,
+    mswShieldDome: null,
     icons,
   };
 
@@ -853,6 +917,34 @@ export function getSpriteBank(): SpriteBank {
       };
     };
     sheetImg.src = HERO_SPRITESHEET_PATH;
+
+    const loadTrimmed = (
+      src: string,
+      assign: (c: HTMLCanvasElement) => void
+    ) => {
+      const img = new Image();
+      img.onload = () => assign(trimImageToCanvas(img));
+      img.src = src;
+    };
+
+    loadTrimmed(MSW_ASSETS.mesoBronze, (c) => {
+      bank.mswMesoBronze = c;
+    });
+    loadTrimmed(MSW_ASSETS.mesoSilver, (c) => {
+      bank.mswMesoSilver = c;
+    });
+    loadTrimmed(MSW_ASSETS.mesoGold, (c) => {
+      bank.mswMesoGold = c;
+    });
+    loadTrimmed(MSW_ASSETS.mesoBag, (c) => {
+      bank.mswMesoBag = c;
+    });
+    loadTrimmed(MSW_ASSETS.hit, (c) => {
+      bank.mswHitBadge = c;
+    });
+    loadTrimmed(MSW_ASSETS.shield, (c) => {
+      bank.mswShieldDome = c;
+    });
   }
 
   cachedBank = bank;

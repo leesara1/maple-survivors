@@ -13,6 +13,17 @@
   }
 }
 
+.msw-cursor-root {
+  cursor: var(--msw-cursor-default, auto);
+}
+
+.msw-cursor-root button,
+.msw-cursor-root a,
+.msw-cursor-root [role="button"],
+.msw-cursor-root .cursor-pointer {
+  cursor: var(--msw-cursor-pointer, pointer);
+}
+
 .font-display {
   font-family: 'Jua', 'Plus Jakarta Sans', sans-serif;
 }

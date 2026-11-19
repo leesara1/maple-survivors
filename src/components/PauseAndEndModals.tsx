@@ -1,5 +1,5 @@
 import React from 'react';
-import { getSpriteBank } from '../game/sprites';
+import { getSpriteBank, MSW_ASSETS } from '../game/sprites';
 import { HudSnapshot } from '../game/types';
 
 interface PauseModalProps {
@@ -34,7 +34,10 @@ export const PauseModal: React.FC<PauseModalProps> = ({
           <span aria-hidden="true">·</span>
           <span>처치 {hud.kills.toLocaleString()}</span>
           <span aria-hidden="true">·</span>
-          <span>코인 {hud.coins.toLocaleString()}</span>
+          <span className="inline-flex items-center gap-1">
+            <img src={MSW_ASSETS.mesoGold} alt="" className="w-4 h-4 pixelated object-contain" />
+            {hud.coins.toLocaleString()}
+          </span>
         </div>
 
         {/* Stat Summary */}
@@ -152,7 +155,8 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
           </div>
           <div className="rounded-xl bg-[#111929] border border-slate-700 p-3">
             <div className="text-[11px] text-slate-400">획득 코인</div>
-            <div className="mt-1 font-mono-num text-lg font-extrabold text-amber-200">
+            <div className="mt-1 flex items-center justify-center gap-1 font-mono-num text-lg font-extrabold text-amber-200">
+              <img src={MSW_ASSETS.mesoGold} alt="" className="w-4 h-4 pixelated object-contain" />
               {hud.coins.toLocaleString()}
             </div>
           </div>

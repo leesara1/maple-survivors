@@ -177,8 +177,18 @@ export default function App() {
     }
   };
 
+  const base = import.meta.env.BASE_URL;
+  const cursorVars = {
+    '--msw-cursor-default': `url("${base}assets/msw/cursor_default.png") 2 2, auto`,
+    '--msw-cursor-pointer': `url("${base}assets/msw/cursor_pointer.png") 6 2, pointer`,
+  } as React.CSSProperties;
+
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#1b2e1e]">
+    <div
+      ref={containerRef}
+      style={cursorVars}
+      className="msw-cursor-root relative w-full h-full overflow-hidden bg-[#1b2e1e]"
+    >
       <canvas
         ref={canvasRef}
         onTouchStart={handleTouchStart}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import { getSpriteBank } from '../game/sprites';
+import { getSpriteBank, MSW_ASSETS } from '../game/sprites';
 import { UpgradeChoice } from '../game/types';
 
 interface LevelUpModalProps {
@@ -20,6 +20,12 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/65 p-4">
       <div className="w-full max-w-3xl rounded-2xl bg-[#181b22]/96 border-2 border-amber-300/80 p-5 sm:p-6 shadow-[0_12px_0_rgba(10,12,18,0.85)] animate-pop-in">
         <div className="text-center mb-5">
+          <img
+            key={level}
+            src={MSW_ASSETS.lvup}
+            alt=""
+            className="w-28 h-24 mx-auto -mt-5 -mb-2 pixelated object-contain pointer-events-none"
+          />
           <div className="font-display text-3xl sm:text-4xl text-amber-300 drop-shadow-[0_2px_0_#0f1218]">
             LEVEL UP! · LV.{level}
           </div>
@@ -99,8 +105,9 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
                   {choice.description}
                 </p>
                 {choice.synergyHint && (
-                  <div className="text-[11px] font-bold text-amber-300">
-                    {choice.synergyHint}
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
+                    <img src={MSW_ASSETS.bulb} alt="" className="w-4 h-4 pixelated object-contain shrink-0" />
+                    <span>{choice.synergyHint}</span>
                   </div>
                 )}
               </div>

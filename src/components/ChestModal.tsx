@@ -1,5 +1,5 @@
 import React from 'react';
-import { getSpriteBank } from '../game/sprites';
+import { getSpriteBank, MSW_ASSETS } from '../game/sprites';
 import { ChestReward } from '../game/types';
 
 interface ChestModalProps {
@@ -43,7 +43,10 @@ export const ChestModal: React.FC<ChestModalProps> = ({ reward, onClose }) => {
         </p>
 
         <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold font-mono-num text-amber-200">
-          <span>+{reward.coinsGained} 코인</span>
+          <span className="inline-flex items-center gap-1.5">
+            <img src={MSW_ASSETS.mesoBag} alt="" className="w-5 h-5 pixelated object-contain" />
+            +{reward.coinsGained} 코인
+          </span>
           <span aria-hidden="true">·</span>
           <span className="text-emerald-300">+{reward.healGained} HP 회복</span>
         </div>
