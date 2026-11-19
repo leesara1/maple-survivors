@@ -5,12 +5,20 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1];
+  const githubPagesBase =
+    process.env.GITHUB_ACTIONS === 'true' && repoName && !repoName.endsWith('.github.io')
+      ? `/${repoName}/`
+      : '/';
+  const base = process.env.VITE_BASE_PATH || githubPagesBase;
+
   return {
+    base,
     plugins: [
       react(),
       tailwindcss(),
-      // Copies src/assets into dist/ so root-relative URLs like
-      // "/src/assets/images/..." (e.g. generate_image output) still resolve
+      // Copies src/assets into dist/ so unbundled URLs like
+      // "src/assets/images/..." (e.g. generate_image output) still resolve
       // in production builds. Do not remove.
       {
         name: 'copy-unbundled-src-assets',

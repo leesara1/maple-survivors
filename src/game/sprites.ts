@@ -617,9 +617,10 @@ const ICON_MATRICES: Record<WeaponId | PassiveId, string[]> = {
   ],
 };
 
-export const UPLOADED_HERO_PATH = '/assets/aistudio/____f2089c1b.png';
-export const UPLOADED_FISH_PATH = '/assets/aistudio/________692bfcd6.png';
-export const HERO_SPRITESHEET_PATH = '/src/assets/images/tuna_hero_spritesheet_1795066392343.jpg';
+const BASE = import.meta.env.BASE_URL;
+export const UPLOADED_HERO_PATH = `${BASE}assets/aistudio/____f2089c1b.png`;
+export const UPLOADED_FISH_PATH = `${BASE}assets/aistudio/________692bfcd6.png`;
+export const HERO_SPRITESHEET_PATH = `${BASE}src/assets/images/tuna_hero_spritesheet_1795066392343.jpg`;
 
 function isMagentaBg(r: number, g: number, b: number): boolean {
   return r > 155 && b > 155 && g < 125 && r - g > 55 && b - g > 55;

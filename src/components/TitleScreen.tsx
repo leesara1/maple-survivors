@@ -8,7 +8,7 @@ interface TitleScreenProps {
   onToggleMute: () => void;
 }
 
-const TITLE_KEYART_URL = '/src/assets/images/title_pixel_keyart_1795066232556.jpg';
+const TITLE_KEYART_URL = `${import.meta.env.BASE_URL}src/assets/images/title_pixel_keyart_1795066232556.jpg`;
 
 export const TitleScreen: React.FC<TitleScreenProps> = ({
   onStart,
