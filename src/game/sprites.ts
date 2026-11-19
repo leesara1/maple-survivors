@@ -619,25 +619,113 @@ const ICON_MATRICES: Record<WeaponId | PassiveId, string[]> = {
 
 export const UPLOADED_HERO_PATH = '/assets/aistudio/____f2089c1b.png';
 export const UPLOADED_FISH_PATH = '/assets/aistudio/________692bfcd6.png';
+export const HERO_SPRITESHEET_PATH = '/src/assets/images/tuna_hero_spritesheet_1795066392343.jpg';
 
-function cropOpaqueCanvas(img: HTMLImageElement): HTMLCanvasElement {
-  const tmp = document.createElement('canvas');
-  tmp.width = img.naturalWidth || img.width;
-  tmp.height = img.naturalHeight || img.height;
-  const tctx = tmp.getContext('2d')!;
-  tctx.imageSmoothingEnabled = false;
-  tctx.drawImage(img, 0, 0);
+function isMagentaBg(r: number, g: number, b: number): boolean {
+  return r > 155 && b > 155 && g < 125 && r - g > 55 && b - g > 55;
+}
 
-  const data = tctx.getImageData(0, 0, tmp.width, tmp.height).data;
-  let minX = tmp.width;
-  let minY = tmp.height;
+function isMagentaFringe(r: number, g: number, b: number): boolean {
+  return r > 115 && b > 115 && g < 115 && (r + b) * 0.5 - g > 38;
+}
+
+function extractSheetCell(
+  img: HTMLImageElement,
+  col: number,
+  row: number,
+  flipHorizontal: boolean
+): HTMLCanvasElement {
+  const fullW = img.naturalWidth || img.width;
+  const fullH = img.naturalHeight || img.height;
+  const halfW = Math.floor(fullW / 2);
+  const halfH = Math.floor(fullH / 2);
+
+  // Inset away from outer edges and the center dividing line
+  const pad = Math.max(8, Math.floor(halfW * 0.03));
+  const sx = col === 0 ? pad : halfW + pad;
+  const sy = row === 0 ? pad : halfH + pad;
+  const sw = halfW - pad * 2;
+  const sh = halfH - pad * 2;
+
+  const cell = document.createElement('canvas');
+  cell.width = sw;
+  cell.height = sh;
+  const ctx = cell.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  const imgData = ctx.getImageData(0, 0, sw, sh);
+  const d = imgData.data;
+  const visited = new Uint8Array(sw * sh);
+  const queue = new Int32Array(sw * sh);
+  let qHead = 0;
+  let qTail = 0;
+
+  const tryPush = (x: number, y: number) => {
+    if (x < 0 || x >= sw || y < 0 || y >= sh) return;
+    const p = y * sw + x;
+    if (visited[p]) return;
+    const idx = p * 4;
+    if (isMagentaBg(d[idx], d[idx + 1], d[idx + 2])) {
+      visited[p] = 1;
+      queue[qTail++] = p;
+    }
+  };
+
+  // Seed flood fill from all 4 borders of the cell
+  for (let x = 0; x < sw; x++) {
+    tryPush(x, 0);
+    tryPush(x, sh - 1);
+  }
+  for (let y = 0; y < sh; y++) {
+    tryPush(0, y);
+    tryPush(sw - 1, y);
+  }
+
+  while (qHead < qTail) {
+    const p = queue[qHead++];
+    d[p * 4 + 3] = 0;
+    const px = p % sw;
+    const py = (p - px) / sw;
+    tryPush(px - 1, py);
+    tryPush(px + 1, py);
+    tryPush(px, py - 1);
+    tryPush(px, py + 1);
+  }
+
+  // Clean 1-2px magenta compression halo around dark outlines
+  for (let pass = 0; pass < 2; pass++) {
+    const toClear: number[] = [];
+    for (let y = 1; y < sh - 1; y++) {
+      for (let x = 1; x < sw - 1; x++) {
+        const p = y * sw + x;
+        const idx = p * 4;
+        if (d[idx + 3] === 0) continue;
+        const hasTransparentNeighbor =
+          d[(p - 1) * 4 + 3] === 0 ||
+          d[(p + 1) * 4 + 3] === 0 ||
+          d[(p - sw) * 4 + 3] === 0 ||
+          d[(p + sw) * 4 + 3] === 0;
+        if (hasTransparentNeighbor && isMagentaFringe(d[idx], d[idx + 1], d[idx + 2])) {
+          toClear.push(p);
+        }
+      }
+    }
+    for (let i = 0; i < toClear.length; i++) {
+      d[toClear[i] * 4 + 3] = 0;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  // Crop tightly to opaque pixels
+  let minX = sw;
+  let minY = sh;
   let maxX = -1;
   let maxY = -1;
-
-  for (let y = 0; y < tmp.height; y++) {
-    for (let x = 0; x < tmp.width; x++) {
-      const a = data[(y * tmp.width + x) * 4 + 3];
-      if (a > 12) {
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (d[(y * sw + x) * 4 + 3] > 20) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -647,25 +735,37 @@ function cropOpaqueCanvas(img: HTMLImageElement): HTMLCanvasElement {
   }
 
   if (maxX < minX || maxY < minY) {
-    return tmp;
+    return cell;
   }
 
   const cw = maxX - minX + 1;
   const ch = maxY - minY + 1;
-  const cropped = document.createElement('canvas');
-  cropped.width = cw;
-  cropped.height = ch;
-  const cctx = cropped.getContext('2d')!;
-  cctx.imageSmoothingEnabled = false;
-  cctx.drawImage(tmp, minX, minY, cw, ch, 0, 0, cw, ch);
-  return cropped;
+  const out = document.createElement('canvas');
+  out.width = cw;
+  out.height = ch;
+  const octx = out.getContext('2d')!;
+  octx.imageSmoothingEnabled = false;
+  if (flipHorizontal) {
+    octx.translate(cw, 0);
+    octx.scale(-1, 1);
+  }
+  octx.drawImage(cell, minX, minY, cw, ch, 0, 0, cw, ch);
+  return out;
+}
+
+export interface HeroSheetFrames {
+  idle: HTMLCanvasElement;
+  idleFlash: HTMLCanvasElement;
+  walk: HTMLCanvasElement[];
+  walkFlash: HTMLCanvasElement[];
+  swing: HTMLCanvasElement;
+  swingFlash: HTMLCanvasElement;
+  baseHeight: number;
 }
 
 export interface SpriteBank {
   player: SpriteFramePair;
-  customHero: HTMLCanvasElement | null;
-  customHeroFlash: HTMLCanvasElement | null;
-  customFish: HTMLCanvasElement | null;
+  heroSheet: HeroSheetFrames | null;
   monsters: Record<MonsterKind, SpriteFramePair>;
   crate: HTMLCanvasElement;
   chest: HTMLCanvasElement;
@@ -701,7 +801,6 @@ export function getSpriteBank(): SpriteBank {
     const c = renderMatrixToCanvas(ICON_MATRICES[key]);
     icons[key] = c.toDataURL();
   });
-  // Use the uploaded frozen fish sprite directly for the greatsword weapon icon!
   icons.greatsword = UPLOADED_FISH_PATH;
 
   const bank: SpriteBank = {
@@ -709,9 +808,7 @@ export function getSpriteBank(): SpriteBank {
       frames: pFrames,
       flashFrames: pFrames.map(makeWhiteMask),
     },
-    customHero: null,
-    customHeroFlash: null,
-    customFish: null,
+    heroSheet: null,
     monsters: {
       jelly: makePair([JELLY_0, JELLY_1]),
       acorn: makePair([ACORN_0, ACORN_1]),
@@ -735,19 +832,26 @@ export function getSpriteBank(): SpriteBank {
   };
 
   if (typeof Image !== 'undefined') {
-    const heroImg = new Image();
-    heroImg.onload = () => {
-      const cropped = cropOpaqueCanvas(heroImg);
-      bank.customHero = cropped;
-      bank.customHeroFlash = makeWhiteMask(cropped);
-    };
-    heroImg.src = UPLOADED_HERO_PATH;
+    const sheetImg = new Image();
+    sheetImg.onload = () => {
+      // Top-left (0,0) & Top-right (1,0) already face RIGHT (+1).
+      // Bottom-left (0,1) & Bottom-right (1,1) face LEFT (-1), so flip horizontally to unify facing RIGHT (+1).
+      const idle = extractSheetCell(sheetImg, 0, 0, false);
+      const run1 = extractSheetCell(sheetImg, 1, 0, false);
+      const run2 = extractSheetCell(sheetImg, 0, 1, true);
+      const swing = extractSheetCell(sheetImg, 1, 1, true);
 
-    const fishImg = new Image();
-    fishImg.onload = () => {
-      bank.customFish = cropOpaqueCanvas(fishImg);
+      bank.heroSheet = {
+        idle,
+        idleFlash: makeWhiteMask(idle),
+        walk: [run1, run2],
+        walkFlash: [makeWhiteMask(run1), makeWhiteMask(run2)],
+        swing,
+        swingFlash: makeWhiteMask(swing),
+        baseHeight: idle.height,
+      };
     };
-    fishImg.src = UPLOADED_FISH_PATH;
+    sheetImg.src = HERO_SPRITESHEET_PATH;
   }
 
   cachedBank = bank;

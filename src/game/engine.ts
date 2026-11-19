@@ -2233,23 +2233,14 @@ export class GameEngine {
 
     ctx.save();
     ctx.translate(px, py - hop);
-    if (this.sprites.customHero) {
-      const hero = this.sprites.customHero;
-      const targetH = 62;
-      const targetW = Math.round((hero.width / hero.height) * targetH);
-      // Native sprite faces left; flip horizontally when facing right
-      if (facingRight) ctx.scale(-1, 1);
-      if (this.sprites.customFish) {
-        const fish = this.sprites.customFish;
-        const fishSize = 52;
-        ctx.save();
-        // Polearm grip near hands in front, tuna blade extending diagonally up-back
-        ctx.translate(-4, 6);
-        ctx.rotate(Math.PI + 0.08);
-        ctx.drawImage(fish, -fishSize * 0.16, -fishSize * 0.84, fishSize, fishSize);
-        ctx.restore();
-      }
-      ctx.drawImage(hero, Math.round(-targetW / 2), Math.round(-targetH / 2), targetW, targetH);
+    if (this.sprites.heroSheet) {
+      const sheet = this.sprites.heroSheet;
+      const unitScale = 68 / sheet.baseHeight;
+      const frame = sheet.walk[Math.floor(t * 6) % sheet.walk.length];
+      const w = Math.round(frame.width * unitScale);
+      const h = Math.round(frame.height * unitScale);
+      if (!facingRight) ctx.scale(-1, 1);
+      ctx.drawImage(frame, Math.round(-w / 2), Math.round(28 - h), w, h);
     } else {
       const frameIdx = Math.floor(t * 7) % 3;
       const pSprite = this.sprites.player.frames[frameIdx];
@@ -2455,9 +2446,8 @@ export class GameEngine {
     const p = this.player;
     const blinkHide = p.invulnTimer > 0 && Math.floor(p.invulnTimer * 24) % 2 === 0;
     const idleBob = p.isMoving
-      ? Math.abs(Math.sin(p.walkTime * 1.15)) * 4.5
+      ? Math.abs(Math.sin(p.walkTime * 1.15)) * 3.5
       : Math.sin(p.walkTime) * 1.5;
-    const runTilt = p.isMoving ? Math.sin(p.walkTime * 1.15) * 0.08 : 0;
 
     // Level-up golden light beam behind/over player
     if (this.levelUpBeamTimer > 0) {
@@ -2473,44 +2463,37 @@ export class GameEngine {
       ctx.restore();
     }
 
-    let drawH = 54;
+    let drawH = 64;
     // Shadow
     ctx.fillStyle = 'rgba(20, 40, 20, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y + 24, 16, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y + 24, 17, 6, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (!blinkHide) {
       ctx.save();
       ctx.translate(Math.round(p.x), Math.round(p.y - idleBob));
 
-      if (this.sprites.customHero && this.sprites.customHeroFlash) {
-        const hero = p.invulnTimer > 0.28 ? this.sprites.customHeroFlash : this.sprites.customHero;
-        drawH = 56;
-        const drawW = Math.round((hero.width / hero.height) * drawH);
-
-        // Uploaded boy faces LEFT natively -> flip when facing right (+1)
-        if (p.facing >= 0) ctx.scale(-1, 1);
-        ctx.rotate(runTilt);
-
-        // Draw boy character first
-        ctx.drawImage(hero, Math.round(-drawW / 2), Math.round(-drawH / 2), drawW, drawH);
-
-        // Draw 냉동참치 held two-handed like a polearm (tail gripped in front, tuna body angled up-back; swings forward!)
-        const fish = this.sprites.customFish;
-        if (fish) {
-          const swingProg = p.fishSwingTimer > 0 ? 1 - p.fishSwingTimer / p.fishSwingDuration : 0;
-          const fishSize = p.fishSwingTimer > 0 ? 58 : 48;
-          const swingAngle =
-            p.fishSwingTimer > 0
-              ? Math.PI - swingProg * 2.25
-              : Math.PI + (p.isMoving ? Math.sin(p.walkTime * 1.15) * 0.08 : 0.05);
-          ctx.save();
-          ctx.translate(-6, 6);
-          ctx.rotate(swingAngle);
-          ctx.drawImage(fish, -fishSize * 0.16, -fishSize * 0.84, fishSize, fishSize);
-          ctx.restore();
+      if (this.sprites.heroSheet) {
+        const sheet = this.sprites.heroSheet;
+        const unitScale = 64 / sheet.baseHeight;
+        const isFlash = p.invulnTimer > 0.28;
+        let frame: HTMLCanvasElement;
+        if (p.fishSwingTimer > 0) {
+          frame = isFlash ? sheet.swingFlash : sheet.swing;
+        } else if (p.isMoving) {
+          const walkIdx = Math.floor(p.walkTime * 0.8) % sheet.walk.length;
+          frame = isFlash ? sheet.walkFlash[walkIdx] : sheet.walk[walkIdx];
+        } else {
+          frame = isFlash ? sheet.idleFlash : sheet.idle;
         }
+
+        const w = Math.round(frame.width * unitScale);
+        const h = Math.round(frame.height * unitScale);
+        // All sheet frames are normalized to face RIGHT (+1); flip when facing LEFT (-1)
+        if (p.facing < 0) ctx.scale(-1, 1);
+        const footAnchorY = p.fishSwingTimer > 0 ? 27 : 24;
+        ctx.drawImage(frame, Math.round(-w / 2), Math.round(footAnchorY - h), w, h);
       } else {
         const scale = CONFIG.PLAYER.SPRITE_SCALE;
         const frameIdx = p.isMoving ? Math.floor(p.walkTime) % 3 : 0;
