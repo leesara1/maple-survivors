@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import { getSpriteBank, MSW_ASSETS } from '../game/sprites';
+import { getSpriteBank, getUiIcons } from '../game/sprites';
 import { UpgradeChoice } from '../game/types';
 
 interface LevelUpModalProps {
@@ -15,6 +15,7 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
   onSelect,
 }) => {
   const sprites = getSpriteBank();
+  const uiIcons = getUiIcons();
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/65 p-4">
@@ -22,7 +23,7 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
         <div className="text-center mb-5">
           <img
             key={level}
-            src={MSW_ASSETS.lvup}
+            src={uiIcons.levelStar}
             alt=""
             className="w-28 h-24 mx-auto -mt-5 -mb-2 pixelated object-contain pointer-events-none"
           />
@@ -106,7 +107,7 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
                 </p>
                 {choice.synergyHint && (
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
-                    <img src={MSW_ASSETS.bulb} alt="" className="w-4 h-4 pixelated object-contain shrink-0" />
+                    <img src={uiIcons.bulb} alt="" className="w-4 h-4 pixelated object-contain shrink-0" />
                     <span>{choice.synergyHint}</span>
                   </div>
                 )}

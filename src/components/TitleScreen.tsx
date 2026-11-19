@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { getSpriteBank, UPLOADED_FISH_PATH } from '../game/sprites';
+import { getSpriteBank, getUiIcons } from '../game/sprites';
 
 interface TitleScreenProps {
   onStart: () => void;
@@ -8,32 +8,18 @@ interface TitleScreenProps {
   onToggleMute: () => void;
 }
 
-const TITLE_KEYART_URL = `${import.meta.env.BASE_URL}src/assets/images/title_pixel_keyart_1795066232556.jpg`;
-
 export const TitleScreen: React.FC<TitleScreenProps> = ({
   onStart,
   muted,
   onToggleMute,
 }) => {
   const sprites = getSpriteBank();
-  const [imgFailed, setImgFailed] = useState(false);
+  const uiIcons = getUiIcons();
 
   return (
     <div className="fixed inset-0 z-20 flex flex-col justify-between overflow-hidden">
-      {/* Full-viewport Chunky 16-bit Pixel Art Key-Art Backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#38bdf8] via-[#7dd3fc] to-[#65a30d]">
-        {!imgFailed && (
-          <img
-            src={TITLE_KEYART_URL}
-            alt="냉동참치를 든 소년과 숲속 몬스터 도트 일러스트"
-            referrerPolicy="no-referrer"
-            onError={() => setImgFailed(true)}
-            className="w-full h-full object-cover object-center pixelated"
-          />
-        )}
-        {/* Subtle contrast scrim strictly behind left title region so pixel art stays bright */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0e1b2e]/85 via-[#0e1b2e]/35 to-transparent" />
-      </div>
+      {/* Live attract scene (hero + monsters) is drawn on the game canvas behind; keep a scrim for legibility */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0e1b2e]/80 via-[#0e1b2e]/30 to-transparent" />
 
       {/* Top Bar: Sound Toggle */}
       <div className="relative z-10 w-full flex justify-end p-5">
@@ -55,7 +41,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
           <div className="flex items-center gap-3.5 mb-3">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-slate-100/35 via-sky-900/80 to-slate-950/95 border-2 border-sky-200 shadow-[0_4px_0_#0b1322] flex items-center justify-center">
               <img
-                src={UPLOADED_FISH_PATH}
+                src={uiIcons.frozenTuna}
                 alt="냉동참치"
                 className="w-12 h-12 pixelated object-contain"
               />
@@ -83,7 +69,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
           </h1>
 
           <p className="mt-3 text-sm sm:text-base text-white font-medium leading-relaxed max-w-md drop-shadow-[0_2px_0_rgba(11,19,34,0.95)]">
-            얼어붙은 전설의 폴암 냉동참치를 휘둘러 몰려오는 숲속 몬스터를 쓸어버리고 20분 생존에 도전하세요!
+            견습 어부가 갓 잡아 꽁꽁 얼린 참치를 휘둘러 몰려오는 숲속 몬스터를 쓸어버리고 20분 생존에 도전하세요!
           </p>
 
           {/* Crisp Pixel Weapon Icon Strip */}

@@ -13,15 +13,15 @@
   }
 }
 
-.msw-cursor-root {
-  cursor: var(--msw-cursor-default, auto);
+.pixel-cursor-root {
+  cursor: var(--pixel-cursor-default, auto);
 }
 
-.msw-cursor-root button,
-.msw-cursor-root a,
-.msw-cursor-root [role="button"],
-.msw-cursor-root .cursor-pointer {
-  cursor: var(--msw-cursor-pointer, pointer);
+.pixel-cursor-root button,
+.pixel-cursor-root a,
+.pixel-cursor-root [role="button"],
+.pixel-cursor-root .cursor-pointer {
+  cursor: var(--pixel-cursor-pointer, pointer);
 }
 
 .font-display {

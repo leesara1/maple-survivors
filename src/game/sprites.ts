@@ -79,70 +79,6 @@ export interface SpriteFramePair {
   flashFrames: HTMLCanvasElement[];
 }
 
-// 18x20 Cute Black-Haired Warrior with Giant Sky-Blue Greatsword on shoulder
-const PLAYER_FRAME_0 = [
-  '............###...',
-  '...........#DDC#..',
-  '....#####.#DDCC#..',
-  '...#KKKKK##DCC#...',
-  '..#KKkKKKK#CC#....',
-  '.#KKKKKKK#CC#.....',
-  '.#KKSSSSK#C#......',
-  '.#KSS#SS#S#.......',
-  '.#KSRSSSRK#.......',
-  '..#SSSSSS#........',
-  '...##RRR##........',
-  '..#BBBBBR#........',
-  '.#SBbBBBb#........',
-  '.#S#BBBB#.........',
-  '..##bBBb#.........',
-  '...#KK#KK#........',
-  '...#KK.#KK#.......',
-  '...###..###.......',
-];
-
-const PLAYER_FRAME_1 = [
-  '............###...',
-  '...........#DDC#..',
-  '....#####.#DDCC#..',
-  '...#KKKKK##DCC#...',
-  '..#KKkKKKK#CC#....',
-  '.#KKKKKKK#CC#.....',
-  '.#KKSSSSK#C#......',
-  '.#KSS#SS#S#.......',
-  '.#KSRSSSRK#.......',
-  '..#SSSSSS#........',
-  '...##RRR##........',
-  '..#BBBBBR#........',
-  '.#SBbBBBb#........',
-  '.#S#BBBB#.........',
-  '..##bBBb#.........',
-  '..#KK#.#KK#.......',
-  '.#KK#...#KK#......',
-  '.###.....###......',
-];
-
-const PLAYER_FRAME_2 = [
-  '............###...',
-  '...........#DDC#..',
-  '....#####.#DDCC#..',
-  '...#KKKKK##DCC#...',
-  '..#KKkKKKK#CC#....',
-  '.#KKKKKKK#CC#.....',
-  '.#KKSSSSK#C#......',
-  '.#KSS#SS#S#.......',
-  '.#KSRSSSRK#.......',
-  '..#SSSSSS#........',
-  '...##RRR##........',
-  '..#BBBBBR#........',
-  '..#BBBBbS#........',
-  '..#BBBB##.........',
-  '..##bBBb#.........',
-  '....#KK#KK#.......',
-  '....#KK.#KK#......',
-  '....###..###......',
-];
-
 // Jelly Drop (16x16)
 const JELLY_0 = [
   '................',
@@ -617,193 +553,434 @@ const ICON_MATRICES: Record<WeaponId | PassiveId, string[]> = {
   ],
 };
 
-const BASE = import.meta.env.BASE_URL;
-export const UPLOADED_HERO_PATH = `${BASE}assets/aistudio/____f2089c1b.png`;
-export const UPLOADED_FISH_PATH = `${BASE}assets/aistudio/________692bfcd6.png`;
-export const HERO_SPRITESHEET_PATH = `${BASE}src/assets/images/tuna_hero_spritesheet_1795066392343.jpg`;
+// ---------------------------------------------------------------------------
+// Hero: fisher apprentice (bandana, striped shirt, rubber apron, boots)
+// and the frozen tuna weapon. Original pixel art; frames are composed in code.
+// ---------------------------------------------------------------------------
 
-export const MSW_ASSETS = {
-  lvup: `${BASE}assets/msw/lvup.gif`,
-  mesoBronze: `${BASE}assets/msw/meso_bronze.gif`,
-  mesoSilver: `${BASE}assets/msw/meso_silver.gif`,
-  mesoGold: `${BASE}assets/msw/meso_gold.gif`,
-  mesoBag: `${BASE}assets/msw/meso_bag.gif`,
-  hit: `${BASE}assets/msw/hit.png`,
-  shield: `${BASE}assets/msw/shield.gif`,
-  bulb: `${BASE}assets/msw/bulb.gif`,
-  quest: `${BASE}assets/msw/quest.gif`,
-  cursorDefault: `${BASE}assets/msw/cursor_default.png`,
-  cursorPointer: `${BASE}assets/msw/cursor_pointer.png`,
+const HERO_PALETTE: Record<string, string> = {
+  '#': '#24182b',
+  'K': '#3a2a26',
+  'k': '#5b4038',
+  'S': '#ffd8be',
+  's': '#f0b08e',
+  'R': '#e63946',
+  'r': '#a4161a',
+  'W': '#ffffff',
+  'B': '#5aa9e6',
+  'b': '#3b7fb8',
+  'O': '#ffb238',
+  'o': '#d9822b',
+  'T': '#5c677d',
+  't': '#3e4a5e',
+  'L': '#4caf6a',
+  'l': '#2f7a48',
+  'E': '#24182b',
+  'P': '#ff8fa3',
+};
+
+const TUNA_PALETTE: Record<string, string> = {
+  '#': '#1a2236',
+  'N': '#2f5d9e',
+  'n': '#1d3b6e',
+  'C': '#6fa8dc',
+  'I': '#e3edf6',
+  'i': '#a9bacd',
+  'Y': '#fde047',
+  'W': '#ffffff',
+  'F': '#c4f1ff',
+  'E': '#0f172a',
+};
+
+// 22px wide head rows (facing right)
+const HERO_HEAD = [
+  '.......########.......',
+  '.....##RRRWRRRR##.....',
+  '....#RRWRRRRRRWRR#....',
+  '...#RRRRRRRRRRRRRR#...',
+  '..##rrrrrrrrrrrrrr#...',
+  '.#Rr#KKkKKSSSSSSSS#...',
+  '#RR##KKKSSSSSSSSSSS#..',
+  '.#r#.#KSSSSSSS#SSSS#..',
+  '.##..#KSSSSSSS#SSSS#..',
+  '.....#SSSSSSSSESSSSS#.',
+  '.....#SSSSPPSSSSSPSS#.',
+  '......#sSSSSSSSSSSS#..',
+  '.......##ssSSSSss##...',
+  '.........##ssss##.....',
+];
+
+// Torso: arms at sides
+const HERO_BODY = [
+  '........#BWBWBWB#.....',
+  '.......#BWOOOOOOW#....',
+  '......#BW#OOOOOO#BW#..',
+  '......#SS#OOWOOO#SS#..',
+  '.......##bOOOOOOb##...',
+  '.........#OOOOOO#.....',
+  '.........#oOOOOo#.....',
+  '.........#oooooo#.....',
+];
+
+// Torso: arms thrust forward for the swing
+const HERO_BODY_SWING = [
+  '........#BWBWBWB#.....',
+  '.......#BWOOOOOOWBWB#.',
+  '.......#BOOOOOOOBWBSS#',
+  '.......#bOOWOOOO#####.',
+  '........#bOOOOOOb#....',
+  '.........#OOOOOO#.....',
+  '.........#oOOOOo#.....',
+  '.........#oooooo#.....',
+];
+
+// hero legs idle
+const HERO_LEGS_IDLE = [
+  '.........#TT##TT#.....',
+  '.........#TT##TT#.....',
+  '........#LLL##LLL#....',
+  '........#LLL##LLL#....',
+  '........#lllL#lllL#...',
+  '........#########.....',
+];
+
+// hero legs walk a
+const HERO_LEGS_WALK_A = [
+  '.........#TT#TT#......',
+  '........#TT#..#TT#....',
+  '.......#LLL#..#LLL#...',
+  '.......#LLL#..#LLL#...',
+  '......#lllL#...#lllL#.',
+  '......######...######.',
+];
+
+// hero legs walk b
+const HERO_LEGS_WALK_B = [
+  '..........#TTTT#......',
+  '..........#TTTT#......',
+  '.........#LLLLL#......',
+  '.........#LLLLL#......',
+  '.........#lllllL#.....',
+  '.........########.....',
+];
+
+// 32x15 frozen tuna, head facing right
+const FROZEN_TUNA = [
+  '................#n#.............',
+  '.#..........#..#nnn#............',
+  '#n#.......##Y##nnnnn#...........',
+  '#Nn#....##Ynnnnnnnnnn####.......',
+  '.#Nn#..#YnnnWNNNNNFnnnnFn###....',
+  '..#Nn##nnNFNNNNNNNNNNNNNNnnW#...',
+  '...#Nn#NNNNCCCCCCCCCCCNNnNNWE##.',
+  '...#NNCCCCCCCCCCCCCCCnnCiCCCCCn#',
+  '...#Ii#IIIIIIIIIIIIFnnIIiIIIi##.',
+  '..#Ii##iiIIIIIFIIIIIIIIIiiF##...',
+  '.#Ii#..#Yiiiiiiiiiiiiiii###.....',
+  '#Ii#....##Y#iiiiiiii####........',
+  '#i#.......##Y#######............',
+  '.#..........#...................',
+  '................................',
+];
+
+// 30x25 frozen tuna carried diagonally over the shoulder
+const FROZEN_TUNA_DIAGONAL = [
+  '............................#.',
+  '........................####n#',
+  '.............#......####WWECn#',
+  '............#n####.#FnNnNWC##.',
+  '.............#nnnn#nnNnNCCIi#.',
+  '............#nnnnnnNNNNiCI##..',
+  '............#nnnFnNNCnCiiiF#..',
+  '..........#.#nnNNNCCCnIIi##...',
+  '.........#Y#nNNNNCCCnnIIi#....',
+  '.........#nnNNNCCCCFFIii#.....',
+  '........#YnnNNCCCIIIIii#......',
+  '........#nnNCCCCIIIiii#.......',
+  '.......#YNNNCCCIFIiii#........',
+  '.#.....#nnNCCIIIFiii#.........',
+  '#n######NNCCIIIiiii#..........',
+  '.#NNnnnnCCIIIIiii##...........',
+  '..####NNC#IiiiY#Y#............',
+  '......#Ii#i#Y##.#.............',
+  '......#Ii##.#.................',
+  '......#I#.....................',
+  '......#I#.....................',
+  '......#i#.....................',
+  '......#i#.....................',
+  '......#i#.....................',
+  '.......#......................',
+];
+
+const HERO_CANVAS_W = 80;
+const HERO_CANVAS_H = 36;
+const HERO_HEAD_Y = 8; // body sits below the raised tuna
+
+function blitMatrix(
+  ctx: CanvasRenderingContext2D,
+  rows: string[],
+  palette: Record<string, string>,
+  ox: number,
+  oy: number
+): void {
+  for (let y = 0; y < rows.length; y++) {
+    const row = rows[y];
+    for (let x = 0; x < row.length; x++) {
+      const color = palette[row[x]];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  }
+}
+
+/** Compose one hero frame (facing right, centered horizontally, feet on the bottom row). */
+function composeHeroFrame(kind: 'idle' | 'walkA' | 'walkB' | 'swing'): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = HERO_CANVAS_W;
+  c.height = HERO_CANVAS_H;
+  const ctx = c.getContext('2d')!;
+  const hx = HERO_CANVAS_W / 2 - 11;
+  const hy = HERO_HEAD_Y;
+  if (kind === 'swing') {
+    blitMatrix(ctx, [...HERO_HEAD, ...HERO_BODY_SWING, ...HERO_LEGS_WALK_A], HERO_PALETTE, hx, hy);
+    blitMatrix(ctx, FROZEN_TUNA, TUNA_PALETTE, hx + 19, hy + 9);
+    blitMatrix(ctx, ['#SS#', '#SS#'], HERO_PALETTE, hx + 19, hy + 15);
+  } else {
+    const legs =
+      kind === 'walkA' ? HERO_LEGS_WALK_A : kind === 'walkB' ? HERO_LEGS_WALK_B : HERO_LEGS_IDLE;
+    blitMatrix(ctx, FROZEN_TUNA_DIAGONAL, TUNA_PALETTE, hx - 1, 2);
+    blitMatrix(ctx, [...HERO_HEAD, ...HERO_BODY, ...legs], HERO_PALETTE, hx, hy);
+  }
+  return c;
+}
+
+function buildHeroSheet(): HeroSheetFrames {
+  const idle = composeHeroFrame('idle');
+  const walk = [composeHeroFrame('walkA'), composeHeroFrame('walkB')];
+  const swing = composeHeroFrame('swing');
+  return {
+    idle,
+    idleFlash: makeWhiteMask(idle),
+    walk,
+    walkFlash: walk.map(makeWhiteMask),
+    swing,
+    swingFlash: makeWhiteMask(swing),
+    baseHeight: HERO_CANVAS_H,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Original code-drawn pixel art for coins, effects, UI icons and cursors.
+// (Replaces the previously bundled third-party GIF/PNG assets.)
+// ---------------------------------------------------------------------------
+
+// 10x10 coin; X = face, x = rim/shadow, H = highlight
+const TIER_COIN_MATRIX = [
+  '...####...',
+  '..#HXXX#..',
+  '.#HXXXXx#.',
+  '#HXXxxXXx#',
+  '#XXx##xXx#',
+  '#XXx##xXx#',
+  '#XXXxxXXx#',
+  '.#XXXXxx#.',
+  '..#xxxx#..',
+  '...####...',
+];
+
+const COIN_TIER_PALETTES = {
+  bronze: { X: '#d9925b', x: '#9a5b32', H: '#f7c79a' },
+  silver: { X: '#cbd5e1', x: '#7c8799', H: '#ffffff' },
+  gold: { X: '#ffd166', x: '#d08a1e', H: '#fff4c2' },
 } as const;
 
-function trimImageToCanvas(img: HTMLImageElement, alphaThreshold = 16): HTMLCanvasElement {
-  const sw = img.naturalWidth || img.width;
-  const sh = img.naturalHeight || img.height;
-  const tmp = document.createElement('canvas');
-  tmp.width = sw;
-  tmp.height = sh;
-  const ctx = tmp.getContext('2d')!;
+// 14x14 coin pouch
+const COIN_POUCH_MATRIX = [
+  '....##..##....',
+  '...#aa##aa#...',
+  '....#aaaa#....',
+  '.....#RR#.....',
+  '....#AAAA#....',
+  '...#AAAAAA#...',
+  '..#AAWAAAAA#..',
+  '.#AAAAA##AAA#.',
+  '.#AAAA#GG#AA#.',
+  '.#AAAA#Gg#AA#.',
+  '.#aAAAA##AAa#.',
+  '..#aaAAAAaa#..',
+  '...##aaaa##...',
+  '.....####.....',
+];
+
+// 19x9 "HIT!" badge
+const HIT_BADGE_MATRIX = [
+  '###################',
+  '#OrrrrrrrrrrrrrrrO#',
+  '#OrWrWrWWWrWWWrWrO#',
+  '#OrWrWrrWrrrWrrWrO#',
+  '#OrWWWrrWrOrWrrWrO#',
+  '#OrWrWrrWrrrWrrrrO#',
+  '#OrWrWrWWWrrWrrWrO#',
+  '#OrrrrrrrrrrrrrrrO#',
+  '###################',
+];
+
+// 16x16 star burst for level-up banner
+const LEVEL_STAR_MATRIX = [
+  '.......##.......',
+  '.......##.......',
+  '......#YY#......',
+  '......#YY#......',
+  '.....#YWWY#.....',
+  '####.#YWWY#.####',
+  '#YYY##YWWY##YYY#',
+  '.#YYYYYWWYYYYY#.',
+  '..#YYYYWWYYYY#..',
+  '...#YYYYYYYY#...',
+  '...#YYYggYYY#...',
+  '..#YYYg##gYYY#..',
+  '..#YYg#..#gYY#..',
+  '.#Yg##....##gY#.',
+  '.###........###.',
+  '................',
+];
+
+// 12x12 hint lightbulb
+const BULB_MATRIX = [
+  '...######...',
+  '..#YYYYWW#..',
+  '.#YYYYYYWW#.',
+  '.#YYYYYYYW#.',
+  '.#YYYYYYYY#.',
+  '.#gYYYYYYg#.',
+  '..#gYYYYg#..',
+  '...#gYYg#...',
+  '...#TTTT#...',
+  '...#tttt#...',
+  '...#TTTT#...',
+  '....####....',
+];
+
+// 12x12 quest scroll with "!"
+const QUEST_MATRIX = [
+  '.##########.',
+  '#aAAAAAAAAa#',
+  '.#WWWWWWWW#.',
+  '.#WWW##WWW#.',
+  '.#WWW#E#WW#.',
+  '.#WWW#E#WW#.',
+  '.#WWW#E#WW#.',
+  '.#WWWW#WWW#.',
+  '.#WWW##WWW#.',
+  '.#WWW#E#WW#.',
+  '#aAAAAAAAAa#',
+  '.##########.',
+];
+
+// 12x16 arrow cursor
+const CURSOR_DEFAULT_MATRIX = [
+  '#...........',
+  '##..........',
+  '#W#.........',
+  '#WW#........',
+  '#WWW#.......',
+  '#WWWW#......',
+  '#WWWWW#.....',
+  '#WWWWWW#....',
+  '#WWWWWWW#...',
+  '#WWWWWWWW#..',
+  '#WWWWW#####.',
+  '#WW#WW#.....',
+  '#W#.#WW#....',
+  '##..#WW#....',
+  '.....#WW#...',
+  '.....###....',
+];
+
+// 14x16 pointing-hand cursor
+const CURSOR_POINTER_MATRIX = [
+  '....##........',
+  '...#WW#.......',
+  '...#WW#.......',
+  '...#WW#.......',
+  '...#WW###.....',
+  '...#WW#WW###..',
+  '.###WW#WW#WW#.',
+  '#WW#WWWWW#WW##',
+  '#WWWWWWWWWWWW#',
+  '.#WWWWWWWWWWW#',
+  '.#WWWWWWWWWWW#',
+  '..#WWWWWWWWW#.',
+  '..#WWWWWWWWW#.',
+  '...#WWWWWWW#..',
+  '...#WWWWWWW#..',
+  '...#########..',
+];
+
+function scaleCanvas(src: HTMLCanvasElement, scale: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = src.width * scale;
+  c.height = src.height * scale;
+  const ctx = c.getContext('2d')!;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, 0, 0);
-
-  const d = ctx.getImageData(0, 0, sw, sh).data;
-  let minX = sw;
-  let minY = sh;
-  let maxX = -1;
-  let maxY = -1;
-  for (let y = 0; y < sh; y++) {
-    for (let x = 0; x < sw; x++) {
-      if (d[(y * sw + x) * 4 + 3] > alphaThreshold) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  if (maxX < minX || maxY < minY) return tmp;
-
-  const cw = maxX - minX + 1;
-  const ch = maxY - minY + 1;
-  const out = document.createElement('canvas');
-  out.width = cw;
-  out.height = ch;
-  const octx = out.getContext('2d')!;
-  octx.imageSmoothingEnabled = false;
-  octx.drawImage(tmp, minX, minY, cw, ch, 0, 0, cw, ch);
-  return out;
+  ctx.drawImage(src, 0, 0, c.width, c.height);
+  return c;
 }
 
-function isMagentaBg(r: number, g: number, b: number): boolean {
-  return r > 155 && b > 155 && g < 125 && r - g > 55 && b - g > 55;
+/** Translucent bubble dome for the evolved shield, drawn procedurally. */
+function makeShieldDome(size = 64): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d')!;
+  const r = size / 2;
+  const g = ctx.createRadialGradient(r * 0.75, r * 0.65, r * 0.1, r, r, r);
+  g.addColorStop(0, 'rgba(255,255,255,0.9)');
+  g.addColorStop(0.35, 'rgba(125,211,252,0.55)');
+  g.addColorStop(0.85, 'rgba(56,189,248,0.75)');
+  g.addColorStop(1, 'rgba(14,116,144,0.9)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(r, r, r * 0.72, Math.PI * 1.1, Math.PI * 1.45);
+  ctx.stroke();
+  return c;
 }
 
-function isMagentaFringe(r: number, g: number, b: number): boolean {
-  return r > 115 && b > 115 && g < 115 && (r + b) * 0.5 - g > 38;
+export interface UiIcons {
+  levelStar: string;
+  frozenTuna: string;
+  coinGold: string;
+  coinPouch: string;
+  bulb: string;
+  quest: string;
+  cursorDefault: string;
+  cursorPointer: string;
 }
 
-function extractSheetCell(
-  img: HTMLImageElement,
-  col: number,
-  row: number,
-  flipHorizontal: boolean
-): HTMLCanvasElement {
-  const fullW = img.naturalWidth || img.width;
-  const fullH = img.naturalHeight || img.height;
-  const halfW = Math.floor(fullW / 2);
-  const halfH = Math.floor(fullH / 2);
+let cachedUiIcons: UiIcons | null = null;
 
-  // Inset away from outer edges and the center dividing line
-  const pad = Math.max(8, Math.floor(halfW * 0.03));
-  const sx = col === 0 ? pad : halfW + pad;
-  const sy = row === 0 ? pad : halfH + pad;
-  const sw = halfW - pad * 2;
-  const sh = halfH - pad * 2;
-
-  const cell = document.createElement('canvas');
-  cell.width = sw;
-  cell.height = sh;
-  const ctx = cell.getContext('2d')!;
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-
-  const imgData = ctx.getImageData(0, 0, sw, sh);
-  const d = imgData.data;
-  const visited = new Uint8Array(sw * sh);
-  const queue = new Int32Array(sw * sh);
-  let qHead = 0;
-  let qTail = 0;
-
-  const tryPush = (x: number, y: number) => {
-    if (x < 0 || x >= sw || y < 0 || y >= sh) return;
-    const p = y * sw + x;
-    if (visited[p]) return;
-    const idx = p * 4;
-    if (isMagentaBg(d[idx], d[idx + 1], d[idx + 2])) {
-      visited[p] = 1;
-      queue[qTail++] = p;
-    }
+/** Data-URL icons for React UI and CSS cursors (all original pixel art). */
+export function getUiIcons(): UiIcons {
+  if (cachedUiIcons) return cachedUiIcons;
+  const url = (rows: string[], scale: number, pal?: Record<string, string>) =>
+    scaleCanvas(renderMatrixToCanvas(rows, pal), scale).toDataURL();
+  cachedUiIcons = {
+    levelStar: url(LEVEL_STAR_MATRIX, 4),
+    frozenTuna: url(FROZEN_TUNA, 4, TUNA_PALETTE),
+    coinGold: url(TIER_COIN_MATRIX, 3, COIN_TIER_PALETTES.gold),
+    coinPouch: url(COIN_POUCH_MATRIX, 3),
+    bulb: url(BULB_MATRIX, 3),
+    quest: url(QUEST_MATRIX, 3),
+    cursorDefault: url(CURSOR_DEFAULT_MATRIX, 2),
+    cursorPointer: url(CURSOR_POINTER_MATRIX, 2),
   };
-
-  // Seed flood fill from all 4 borders of the cell
-  for (let x = 0; x < sw; x++) {
-    tryPush(x, 0);
-    tryPush(x, sh - 1);
-  }
-  for (let y = 0; y < sh; y++) {
-    tryPush(0, y);
-    tryPush(sw - 1, y);
-  }
-
-  while (qHead < qTail) {
-    const p = queue[qHead++];
-    d[p * 4 + 3] = 0;
-    const px = p % sw;
-    const py = (p - px) / sw;
-    tryPush(px - 1, py);
-    tryPush(px + 1, py);
-    tryPush(px, py - 1);
-    tryPush(px, py + 1);
-  }
-
-  // Clean 1-2px magenta compression halo around dark outlines
-  for (let pass = 0; pass < 2; pass++) {
-    const toClear: number[] = [];
-    for (let y = 1; y < sh - 1; y++) {
-      for (let x = 1; x < sw - 1; x++) {
-        const p = y * sw + x;
-        const idx = p * 4;
-        if (d[idx + 3] === 0) continue;
-        const hasTransparentNeighbor =
-          d[(p - 1) * 4 + 3] === 0 ||
-          d[(p + 1) * 4 + 3] === 0 ||
-          d[(p - sw) * 4 + 3] === 0 ||
-          d[(p + sw) * 4 + 3] === 0;
-        if (hasTransparentNeighbor && isMagentaFringe(d[idx], d[idx + 1], d[idx + 2])) {
-          toClear.push(p);
-        }
-      }
-    }
-    for (let i = 0; i < toClear.length; i++) {
-      d[toClear[i] * 4 + 3] = 0;
-    }
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-
-  // Crop tightly to opaque pixels
-  let minX = sw;
-  let minY = sh;
-  let maxX = -1;
-  let maxY = -1;
-  for (let y = 0; y < sh; y++) {
-    for (let x = 0; x < sw; x++) {
-      if (d[(y * sw + x) * 4 + 3] > 20) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-
-  if (maxX < minX || maxY < minY) {
-    return cell;
-  }
-
-  const cw = maxX - minX + 1;
-  const ch = maxY - minY + 1;
-  const out = document.createElement('canvas');
-  out.width = cw;
-  out.height = ch;
-  const octx = out.getContext('2d')!;
-  octx.imageSmoothingEnabled = false;
-  if (flipHorizontal) {
-    octx.translate(cw, 0);
-    octx.scale(-1, 1);
-  }
-  octx.drawImage(cell, minX, minY, cw, ch, 0, 0, cw, ch);
-  return out;
+  return cachedUiIcons;
 }
 
 export interface HeroSheetFrames {
@@ -817,8 +994,7 @@ export interface HeroSheetFrames {
 }
 
 export interface SpriteBank {
-  player: SpriteFramePair;
-  heroSheet: HeroSheetFrames | null;
+  heroSheet: HeroSheetFrames;
   monsters: Record<MonsterKind, SpriteFramePair>;
   crate: HTMLCanvasElement;
   chest: HTMLCanvasElement;
@@ -829,12 +1005,12 @@ export interface SpriteBank {
   potion: HTMLCanvasElement;
   magnetAll: HTMLCanvasElement;
   bomb: HTMLCanvasElement;
-  mswMesoBronze: HTMLCanvasElement | null;
-  mswMesoSilver: HTMLCanvasElement | null;
-  mswMesoGold: HTMLCanvasElement | null;
-  mswMesoBag: HTMLCanvasElement | null;
-  mswHitBadge: HTMLCanvasElement | null;
-  mswShieldDome: HTMLCanvasElement | null;
+  coinBronze: HTMLCanvasElement;
+  coinSilver: HTMLCanvasElement;
+  coinGold: HTMLCanvasElement;
+  coinPouch: HTMLCanvasElement;
+  hitBadge: HTMLCanvasElement;
+  shieldDome: HTMLCanvasElement;
   icons: Record<WeaponId | PassiveId, string>; // data URLs for React UI
 }
 
@@ -842,12 +1018,6 @@ let cachedBank: SpriteBank | null = null;
 
 export function getSpriteBank(): SpriteBank {
   if (cachedBank) return cachedBank;
-
-  const pFrames = [
-    renderMatrixToCanvas(PLAYER_FRAME_0),
-    renderMatrixToCanvas(PLAYER_FRAME_1),
-    renderMatrixToCanvas(PLAYER_FRAME_2),
-  ];
 
   const makePair = (matrices: string[][]): SpriteFramePair => {
     const frames = matrices.map((m) => renderMatrixToCanvas(m));
@@ -860,14 +1030,10 @@ export function getSpriteBank(): SpriteBank {
     const c = renderMatrixToCanvas(ICON_MATRICES[key]);
     icons[key] = c.toDataURL();
   });
-  icons.greatsword = UPLOADED_FISH_PATH;
+  icons.greatsword = scaleCanvas(renderMatrixToCanvas(FROZEN_TUNA, TUNA_PALETTE), 3).toDataURL();
 
   const bank: SpriteBank = {
-    player: {
-      frames: pFrames,
-      flashFrames: pFrames.map(makeWhiteMask),
-    },
-    heroSheet: null,
+    heroSheet: buildHeroSheet(),
     monsters: {
       jelly: makePair([JELLY_0, JELLY_1]),
       acorn: makePair([ACORN_0, ACORN_1]),
@@ -887,65 +1053,14 @@ export function getSpriteBank(): SpriteBank {
     potion: renderMatrixToCanvas(POTION_MATRIX),
     magnetAll: renderMatrixToCanvas(MAGNET_MATRIX),
     bomb: renderMatrixToCanvas(BOMB_MATRIX),
-    mswMesoBronze: null,
-    mswMesoSilver: null,
-    mswMesoGold: null,
-    mswMesoBag: null,
-    mswHitBadge: null,
-    mswShieldDome: null,
+    coinBronze: renderMatrixToCanvas(TIER_COIN_MATRIX, COIN_TIER_PALETTES.bronze),
+    coinSilver: renderMatrixToCanvas(TIER_COIN_MATRIX, COIN_TIER_PALETTES.silver),
+    coinGold: renderMatrixToCanvas(TIER_COIN_MATRIX, COIN_TIER_PALETTES.gold),
+    coinPouch: renderMatrixToCanvas(COIN_POUCH_MATRIX),
+    hitBadge: scaleCanvas(renderMatrixToCanvas(HIT_BADGE_MATRIX), 2),
+    shieldDome: makeShieldDome(),
     icons,
   };
-
-  if (typeof Image !== 'undefined') {
-    const sheetImg = new Image();
-    sheetImg.onload = () => {
-      // Top-left (0,0) & Top-right (1,0) already face RIGHT (+1).
-      // Bottom-left (0,1) & Bottom-right (1,1) face LEFT (-1), so flip horizontally to unify facing RIGHT (+1).
-      const idle = extractSheetCell(sheetImg, 0, 0, false);
-      const run1 = extractSheetCell(sheetImg, 1, 0, false);
-      const run2 = extractSheetCell(sheetImg, 0, 1, true);
-      const swing = extractSheetCell(sheetImg, 1, 1, true);
-
-      bank.heroSheet = {
-        idle,
-        idleFlash: makeWhiteMask(idle),
-        walk: [run1, run2],
-        walkFlash: [makeWhiteMask(run1), makeWhiteMask(run2)],
-        swing,
-        swingFlash: makeWhiteMask(swing),
-        baseHeight: idle.height,
-      };
-    };
-    sheetImg.src = HERO_SPRITESHEET_PATH;
-
-    const loadTrimmed = (
-      src: string,
-      assign: (c: HTMLCanvasElement) => void
-    ) => {
-      const img = new Image();
-      img.onload = () => assign(trimImageToCanvas(img));
-      img.src = src;
-    };
-
-    loadTrimmed(MSW_ASSETS.mesoBronze, (c) => {
-      bank.mswMesoBronze = c;
-    });
-    loadTrimmed(MSW_ASSETS.mesoSilver, (c) => {
-      bank.mswMesoSilver = c;
-    });
-    loadTrimmed(MSW_ASSETS.mesoGold, (c) => {
-      bank.mswMesoGold = c;
-    });
-    loadTrimmed(MSW_ASSETS.mesoBag, (c) => {
-      bank.mswMesoBag = c;
-    });
-    loadTrimmed(MSW_ASSETS.hit, (c) => {
-      bank.mswHitBadge = c;
-    });
-    loadTrimmed(MSW_ASSETS.shield, (c) => {
-      bank.mswShieldDome = c;
-    });
-  }
 
   cachedBank = bank;
   return cachedBank;

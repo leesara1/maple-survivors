@@ -2087,7 +2087,7 @@ export class GameEngine {
     this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
   }
 
-  // Deterministic tile hash for infinite seamless Maple-style meadow
+  // Deterministic tile hash for infinite seamless pastel meadow
   private tileHash(tx: number, ty: number): number {
     let h = Math.imul(tx, 374761393) + Math.imul(ty, 668265263);
     h = (h ^ (h >>> 13)) * 1274126177;
@@ -2111,7 +2111,7 @@ export class GameEngine {
     const ox = Math.round(viewW * 0.5 - this.camX + shakeX);
     const oy = Math.round(viewH * 0.5 - this.camY + shakeY);
 
-    // 1. Bright Maple-like Grass & Dirt Ground
+    // 1. Bright Grass & Dirt Ground
     this.renderInfiniteForestGround(ctx, viewW, viewH, ox, oy);
 
     ctx.save();
@@ -2279,26 +2279,14 @@ export class GameEngine {
 
     ctx.save();
     ctx.translate(px, py - hop);
-    if (this.sprites.heroSheet) {
+    {
       const sheet = this.sprites.heroSheet;
-      const unitScale = 68 / sheet.baseHeight;
+      const unitScale = 3; // integer scale keeps title hero pixels crisp
       const frame = sheet.walk[Math.floor(t * 6) % sheet.walk.length];
       const w = Math.round(frame.width * unitScale);
       const h = Math.round(frame.height * unitScale);
       if (!facingRight) ctx.scale(-1, 1);
       ctx.drawImage(frame, Math.round(-w / 2), Math.round(28 - h), w, h);
-    } else {
-      const frameIdx = Math.floor(t * 7) % 3;
-      const pSprite = this.sprites.player.frames[frameIdx];
-      const scale = 3.2;
-      if (!facingRight) ctx.scale(-1, 1);
-      ctx.drawImage(
-        pSprite,
-        Math.round((-pSprite.width * scale) / 2),
-        Math.round((-pSprite.height * scale) / 2),
-        Math.round(pSprite.width * scale),
-        Math.round(pSprite.height * scale)
-      );
     }
     ctx.restore();
 
@@ -2401,25 +2389,17 @@ export class GameEngine {
           h = Math.round(spr.height * 2.3);
           break;
         case 'coin': {
-          const mswCoin =
+          spr =
             pk.value >= 10
-              ? this.sprites.mswMesoBag
+              ? this.sprites.coinPouch
               : pk.value >= 5
-                ? this.sprites.mswMesoGold
+                ? this.sprites.coinGold
                 : pk.value >= 2
-                  ? this.sprites.mswMesoSilver
-                  : this.sprites.mswMesoBronze;
-          if (mswCoin) {
-            spr = mswCoin;
-            const targetH = pk.value >= 10 ? 28 : pk.value >= 5 ? 25 : pk.value >= 2 ? 22 : 20;
-            const aspect = spr.width / Math.max(1, spr.height);
-            h = targetH;
-            w = Math.round(targetH * aspect);
-          } else {
-            spr = this.sprites.coin;
-            w = Math.round(spr.width * 2.1);
-            h = Math.round(spr.height * 2.1);
-          }
+                  ? this.sprites.coinSilver
+                  : this.sprites.coinBronze;
+          const targetH = pk.value >= 10 ? 28 : pk.value >= 5 ? 25 : pk.value >= 2 ? 22 : 20;
+          h = targetH;
+          w = Math.round(targetH * (spr.width / Math.max(1, spr.height)));
           break;
         }
         case 'potion':
@@ -2533,7 +2513,8 @@ export class GameEngine {
       ctx.restore();
     }
 
-    let drawH = 64;
+    // Hero head top sits ~56px above the feet; HP bar & LEVEL UP text anchor off this
+    const drawH = 48;
     // Shadow
     ctx.fillStyle = 'rgba(20, 40, 20, 0.3)';
     ctx.beginPath();
@@ -2544,9 +2525,9 @@ export class GameEngine {
       ctx.save();
       ctx.translate(Math.round(p.x), Math.round(p.y - idleBob));
 
-      if (this.sprites.heroSheet) {
+      {
         const sheet = this.sprites.heroSheet;
-        const unitScale = 64 / sheet.baseHeight;
+        const unitScale = 2; // integer scale keeps hero pixels crisp
         const isFlash = p.invulnTimer > 0.28;
         let frame: HTMLCanvasElement;
         if (p.fishSwingTimer > 0) {
@@ -2562,19 +2543,7 @@ export class GameEngine {
         const h = Math.round(frame.height * unitScale);
         // All sheet frames are normalized to face RIGHT (+1); flip when facing LEFT (-1)
         if (p.facing < 0) ctx.scale(-1, 1);
-        const footAnchorY = p.fishSwingTimer > 0 ? 27 : 24;
-        ctx.drawImage(frame, Math.round(-w / 2), Math.round(footAnchorY - h), w, h);
-      } else {
-        const scale = CONFIG.PLAYER.SPRITE_SCALE;
-        const frameIdx = p.isMoving ? Math.floor(p.walkTime) % 3 : 0;
-        const spr =
-          p.invulnTimer > 0.28
-            ? this.sprites.player.flashFrames[frameIdx]
-            : this.sprites.player.frames[frameIdx];
-        const w = Math.round(spr.width * scale);
-        drawH = Math.round(spr.height * scale);
-        if (p.facing < 0) ctx.scale(-1, 1);
-        ctx.drawImage(spr, Math.round(-w / 2), Math.round(-drawH / 2), w, drawH);
+        ctx.drawImage(frame, Math.round(-w / 2), Math.round(24 - h), w, h);
       }
 
       ctx.restore();
@@ -2613,8 +2582,8 @@ export class GameEngine {
       const def = CONFIG.WEAPONS.shield;
       const stats = shieldWeapon.evolved ? def.evolvedStats : def.levels[shieldWeapon.level - 1];
       if (shieldWeapon.evolved) {
-        if (this.sprites.mswShieldDome) {
-          const dome = this.sprites.mswShieldDome;
+        {
+          const dome = this.sprites.shieldDome;
           const domeSize = stats.area * 2.15;
           const domeH = Math.round(domeSize * (dome.height / Math.max(1, dome.width)));
           ctx.save();
@@ -2814,9 +2783,9 @@ export class GameEngine {
       ctx.restore();
     }
 
-    // MSW Maple "HIT!" Pixel Badges on crits & player hits
-    const hitSpr = this.sprites.mswHitBadge;
-    if (hitSpr) {
+    // "HIT!" pixel badges on crits & player hits
+    const hitSpr = this.sprites.hitBadge;
+    {
       for (let i = 0; i < this.hitBadges.length; i++) {
         const hb = this.hitBadges[i];
         if (!hb.active) continue;

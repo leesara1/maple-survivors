@@ -7,6 +7,7 @@ import { TitleScreen } from './components/TitleScreen';
 import { CONFIG } from './game/config';
 import { GameEngine } from './game/engine';
 import { HudSnapshot } from './game/types';
+import { getUiIcons } from './game/sprites';
 
 const INITIAL_HUD: HudSnapshot = {
   phase: 'TITLE',
@@ -177,17 +178,17 @@ export default function App() {
     }
   };
 
-  const base = import.meta.env.BASE_URL;
+  const uiIcons = getUiIcons();
   const cursorVars = {
-    '--msw-cursor-default': `url("${base}assets/msw/cursor_default.png") 2 2, auto`,
-    '--msw-cursor-pointer': `url("${base}assets/msw/cursor_pointer.png") 6 2, pointer`,
+    '--pixel-cursor-default': `url("${uiIcons.cursorDefault}") 1 1, auto`,
+    '--pixel-cursor-pointer': `url("${uiIcons.cursorPointer}") 9 1, pointer`,
   } as React.CSSProperties;
 
   return (
     <div
       ref={containerRef}
       style={cursorVars}
-      className="msw-cursor-root relative w-full h-full overflow-hidden bg-[#1b2e1e]"
+      className="pixel-cursor-root relative w-full h-full overflow-hidden bg-[#1b2e1e]"
     >
       <canvas
         ref={canvasRef}

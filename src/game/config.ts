@@ -50,7 +50,6 @@ export const CONFIG = {
     BASE_MAGNET_RADIUS: 82,
     PICKUP_COLLECT_RADIUS: 22,
     INVULN_DURATION: 0.42,
-    SPRITE_SCALE: 2.5,
   },
 
   EXP: {
@@ -70,7 +69,7 @@ export const CONFIG = {
       id: 'greatsword',
       name: '냉동참치',
       evolvedName: '진 · 대왕 냉동참치',
-      description: '무기분류 : 폴암(두손무기) · 얼어붙은 거대 참치를 앞쪽 반원으로 힘껏 휘두릅니다.',
+      description: '견습 어부의 비장의 무기 · 꽁꽁 언 참치를 앞쪽 반원으로 힘껏 휘두릅니다.',
       evolvedDescription: '화면 절반을 가르는 초대형 냉동참치 서리 검기를 양방향으로 날립니다!',
       pairedPassive: 'might',
       accentColor: '#7dd3fc',

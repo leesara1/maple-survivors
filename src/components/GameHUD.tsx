@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pause, Volume2, VolumeX } from 'lucide-react';
-import { getSpriteBank, MSW_ASSETS } from '../game/sprites';
+import { getSpriteBank, getUiIcons } from '../game/sprites';
 import { HudSnapshot } from '../game/types';
 
 interface GameHUDProps {
@@ -22,6 +22,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   onToggleMute,
 }) => {
   const sprites = getSpriteBank();
+  const uiIcons = getUiIcons();
   const hpPct = Math.max(0, Math.min(100, (hud.hp / Math.max(1, hud.maxHp)) * 100));
   const expPct = Math.max(0, Math.min(100, (hud.exp / Math.max(1, hud.expToNext)) * 100));
 
@@ -112,7 +113,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             </span>
             <span className="text-slate-500" aria-hidden="true">·</span>
             <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-200 font-mono-num">
-              <img src={MSW_ASSETS.mesoGold} alt="" className="w-5 h-5 pixelated object-contain" />
+              <img src={uiIcons.coinGold} alt="" className="w-5 h-5 pixelated object-contain" />
               {hud.coins.toLocaleString()}
             </span>
           </div>
@@ -138,7 +139,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
           {/* Wave Announcement Banner */}
           {hud.waveBanner && (
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#162033]/85 border border-amber-300/60 text-amber-200 text-xs sm:text-sm font-bold animate-pop-in">
-              <img src={MSW_ASSETS.quest} alt="" className="w-5 h-5 pixelated object-contain shrink-0" />
+              <img src={uiIcons.quest} alt="" className="w-5 h-5 pixelated object-contain shrink-0" />
               <span>{hud.waveBanner}</span>
             </div>
           )}
