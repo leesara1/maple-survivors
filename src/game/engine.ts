@@ -205,7 +205,9 @@ export class GameEngine {
     coins: 0,
     shieldAngle: 0,
     fishSwingTimer: 0,
-    fishSwingDuration: 0.24,
+    fishSwingDuration: 0.3,
+    /** True when the swing should spin the tuna a full circle (front + back cleave). */
+    fishSwingSpin: false,
   };
 
   private weapons: OwnedWeapon[] = [];
@@ -905,6 +907,7 @@ export class GameEngine {
   ): void {
     sound.playSlash(owned.evolved);
     this.player.fishSwingTimer = this.player.fishSwingDuration;
+    this.player.fishSwingSpin = stats.count >= 2;
     const baseAngle = this.player.facing >= 0 ? 0 : Math.PI;
     const dirs = stats.count >= 2 ? [0, Math.PI] : [0];
     const dmg = stats.damage * mightMult;
@@ -1436,7 +1439,11 @@ export class GameEngine {
         ? '#6ee7b7'
         : m.kind === 'ghost' || m.kind === 'boss_ghost'
           ? '#d8b4fe'
-          : '#fde047';
+          : m.kind === 'piglet'
+            ? '#ffb3c6'
+            : m.kind === 'mushroom'
+              ? '#ef5b5b'
+              : '#fde047';
     this.spawnStarBurst(m.x, m.y, m.isBoss ? 22 : m.isElite ? 12 : 5, starColor);
 
     // Drops
@@ -2281,21 +2288,20 @@ export class GameEngine {
     ctx.translate(px, py - hop);
     {
       const sheet = this.sprites.heroSheet;
-      const unitScale = 3; // integer scale keeps title hero pixels crisp
       const frame = sheet.walk[Math.floor(t * 6) % sheet.walk.length];
-      const w = Math.round(frame.width * unitScale);
-      const h = Math.round(frame.height * unitScale);
       if (!facingRight) ctx.scale(-1, 1);
-      ctx.drawImage(frame, Math.round(-w / 2), Math.round(28 - h), w, h);
+      // integer scale keeps title hero pixels crisp
+      this.drawHeroWithTuna(ctx, frame, sheet.tuna, sheet.handIdle, 3, 28, -0.35 + Math.sin(t * 6) * 0.1);
     }
     ctx.restore();
 
     // Cute orbiting jellies & acorns around the title meadow
     const critters: Array<{ kind: MonsterKind; r: number; spd: number; phase: number }> = [
       { kind: 'jelly', r: 170, spd: 0.4, phase: 0 },
-      { kind: 'jelly', r: 210, spd: 0.32, phase: 2.1 },
+      { kind: 'piglet', r: 210, spd: 0.32, phase: 2.1 },
       { kind: 'acorn', r: 190, spd: -0.45, phase: 1.0 },
       { kind: 'ghost', r: 240, spd: 0.28, phase: 4.0 },
+      { kind: 'mushroom', r: 265, spd: -0.24, phase: 5.2 },
     ];
     for (const c of critters) {
       const ang = t * c.spd + c.phase;
@@ -2492,6 +2498,54 @@ export class GameEngine {
     }
   }
 
+  /**
+   * Draw a hero frame with the frozen tuna rotated around the hand pivot.
+   * Expects ctx already translated to the hero's feet anchor (and mirrored if facing left).
+   * The tuna goes behind the body so the hand covers the grip.
+   */
+  private drawHeroWithTuna(
+    ctx: CanvasRenderingContext2D,
+    frame: HTMLCanvasElement,
+    tuna: HTMLCanvasElement,
+    hand: { x: number; y: number },
+    scale: number,
+    feetY: number,
+    angle: number,
+    inFront = false
+  ): void {
+    const sheet = this.sprites.heroSheet;
+    const w = Math.round(frame.width * scale);
+    const h = Math.round(frame.height * scale);
+    const left = Math.round(-w / 2);
+    const top = Math.round(feetY - h);
+    const hx = left + hand.x * scale;
+    const hy = top + hand.y * scale;
+
+    if (inFront) ctx.drawImage(frame, left, top, w, h);
+
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(angle);
+    ctx.drawImage(
+      tuna,
+      Math.round(-sheet.tunaGrip.x * scale),
+      Math.round(-sheet.tunaGrip.y * scale),
+      tuna.width * scale,
+      tuna.height * scale
+    );
+    ctx.restore();
+
+    if (inFront) {
+      // Fist drawn over the grip so the tuna reads as held
+      ctx.fillStyle = '#24182b';
+      ctx.fillRect(Math.round(hx - 2 * scale), Math.round(hy - 2 * scale), 4 * scale, 4 * scale);
+      ctx.fillStyle = '#ffd8be';
+      ctx.fillRect(Math.round(hx - 1 * scale), Math.round(hy - 1 * scale), 2 * scale, 2 * scale);
+    } else {
+      ctx.drawImage(frame, left, top, w, h);
+    }
+  }
+
   private renderPlayer(ctx: CanvasRenderingContext2D): void {
     const p = this.player;
     const blinkHide = p.invulnTimer > 0 && Math.floor(p.invulnTimer * 24) % 2 === 0;
@@ -2514,7 +2568,7 @@ export class GameEngine {
     }
 
     // Hero head top sits ~56px above the feet; HP bar & LEVEL UP text anchor off this
-    const drawH = 48;
+    const drawH = 52;
     // Shadow
     ctx.fillStyle = 'rgba(20, 40, 20, 0.3)';
     ctx.beginPath();
@@ -2539,11 +2593,33 @@ export class GameEngine {
           frame = isFlash ? sheet.idleFlash : sheet.idle;
         }
 
-        const w = Math.round(frame.width * unitScale);
-        const h = Math.round(frame.height * unitScale);
+        // Tuna angle (radians, facing right; positive = clockwise / downward)
+        let tunaAngle: number;
+        const swinging = p.fishSwingTimer > 0;
+        if (swinging) {
+          const u = 1 - p.fishSwingTimer / p.fishSwingDuration;
+          const e = 1 - Math.pow(1 - u, 3); // fast start, soft follow-through
+          const start = -1.6; // raised straight overhead
+          const end = p.fishSwingSpin ? start + Math.PI * 2 : 1.0; // full spin or down-forward
+          tunaAngle = start + (end - start) * e;
+        } else if (p.isMoving) {
+          tunaAngle = -0.35 + Math.sin(p.walkTime * 1.6) * 0.12;
+        } else {
+          tunaAngle = -0.35 + Math.sin(p.walkTime * 0.8) * 0.04;
+        }
+
         // All sheet frames are normalized to face RIGHT (+1); flip when facing LEFT (-1)
         if (p.facing < 0) ctx.scale(-1, 1);
-        ctx.drawImage(frame, Math.round(-w / 2), Math.round(24 - h), w, h);
+        this.drawHeroWithTuna(
+          ctx,
+          frame,
+          isFlash ? sheet.tunaFlash : sheet.tuna,
+          swinging ? sheet.handSwing : sheet.handIdle,
+          unitScale,
+          24,
+          tunaAngle,
+          swinging
+        );
       }
 
       ctx.restore();

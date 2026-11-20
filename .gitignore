@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local-only third-party reference sprites (do not publish)
+public/maple/

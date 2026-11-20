@@ -79,213 +79,386 @@ export interface SpriteFramePair {
   flashFrames: HTMLCanvasElement[];
 }
 
-// Jelly Drop (16x16)
+// ---------------------------------------------------------------------------
+// Monsters: original chibi pixel art (thick outline, big sparkly eyes, blush,
+// 3-tone shading). Rendered with MOB_PALETTE.
+// ---------------------------------------------------------------------------
+const MOB_PALETTE: Record<string, string> = {
+  '#': '#24182b',
+  'W': '#ffffff',
+  'R': '#ff8fa3',
+  'G': '#ffd166',
+  'g': '#e09f3e',
+  'Y': '#fde047',
+  'E': '#ef4444',
+  'U': '#38bdf8',
+  'O': '#fb923c',
+  'N': '#c4f7e3',
+  'M': '#6ee7b7',
+  'm': '#34d399',
+  'n': '#1f9d75',
+  'I': '#d9a877',
+  'A': '#b07d4f',
+  'a': '#875a36',
+  'J': '#f2c58a',
+  'j': '#d39a58',
+  'Z': '#f3e8ff',
+  'P': '#d8b4fe',
+  'p': '#a87ee8',
+  'V': '#7e22ce',
+  'v': '#581c87',
+  'y': '#ffe0e8',
+  'Q': '#ffb3c6',
+  'q': '#ef8fab',
+  'z': '#c45f7d',
+  'o': '#ff9b8e',
+  'F': '#ef5b5b',
+  'f': '#b83a44',
+  'H': '#fff3df',
+  'h': '#e6cba3',
+  'u': '#cbd5e1',
+  'T': '#94a3b8',
+  't': '#64748b',
+  'L': '#74c69d',
+  'l': '#2d6a4f',
+  'B': '#4ea8de',
+  'K': '#3b2a4d',
+  'k': '#5b4570',
+};
+
+// Jelly drop slime (18x16)
 const JELLY_0 = [
-  '................',
-  '......####......',
-  '....##MMMM##....',
-  '...#MMWWMMMM#...',
-  '..#MMWMMMMMMM#..',
-  '..#MMMMMMMMMM#..',
-  '.#MMM#MMMM#MMM#.',
-  '.#MMRMMMMMMRMM#.',
-  '.#MMMMMMMMMMMM#.',
-  '.#MmmMMMMMMmmM#.',
-  '..#mmmmmmmmmm#..',
-  '...##########...',
-  '................',
+  '........##........',
+  '.......#NN#.......',
+  '......#NMMM#......',
+  '.....#NMMMMM#.....',
+  '...##NNMMMMMM##...',
+  '..#NNWWMMMMMMMm#..',
+  '.#NNWWMMMMMMMMMm#.',
+  '.#NMMMMMMMMMMMMm#.',
+  '#NMMM#WMMMMM#WMMm#',
+  '#MMMM##MMMMM##MMm#',
+  '#MMMM##MMMMM##MMm#',
+  '#MMRRMMMM#MMMMRRm#',
+  '#mMMMMMMMMMMMMMmm#',
+  '.#mmmMMMMMMMMmmn#.',
+  '..##nnmmmmmmnn##..',
+  '....##########....',
 ];
 
 const JELLY_1 = [
-  '................',
-  '................',
-  '.....######.....',
-  '...##MMMMMM##...',
-  '..#MMWWMMMMMM#..',
-  '.#MMWMMMMMMMMM#.',
-  '.#MMM#MMMM#MMM#.',
-  '.#MMRMMMMMMRMM#.',
-  '.#MMMMMMMMMMMM#.',
-  '.#mmmmmmmmmmmm#.',
-  '..############..',
-  '................',
+  '..................',
+  '..................',
+  '........##........',
+  '.......#NM#.......',
+  '....###NMMM###....',
+  '..##NNWWMMMMMMm##.',
+  '.#NNWWMMMMMMMMMm#.',
+  '#NMMM#WMMMMM#WMMm#',
+  '#MMMM##MMMMM##MMm#',
+  '#MMMM##MMMMM##MMm#',
+  '#MMRRMMMM#MMMMRRm#',
+  '#mMMMMMMMMMMMMMmm#',
+  '#mmmMMMMMMMMMMmmn#',
+  '.##nnmmmmmmmmnn##.',
+  '...############...',
+  '..................',
 ];
 
-// Acorn Soldier (16x16)
+// Acorn soldier (18x17)
 const ACORN_0 = [
-  '.......##.......',
-  '......#LL#......',
-  '....########....',
-  '...#aaaaaaaa#...',
-  '..#aaAAaaAAaa#..',
-  '..############..',
-  '..#SSSSSSSSSS#..',
-  '..#SS#SSSS#SS#..',
-  '..#SSRSSSSRSS#..',
-  '...#SSSSSSSS#...',
-  '...##BBBBBB##...',
-  '..#G#BBBBBB#L#..',
-  '...#.#AA#AA#....',
-  '.....###.###....',
+  '.........##.......',
+  '........#aa#......',
+  '.....####aa####...',
+  '....#IIAAAAAAAA#..',
+  '...#IAAIAAIAAIAa#.',
+  '...#AaAAaAAaAAaa#.',
+  '...##############.',
+  '...#JJJJJJJJJJjj#.',
+  '..#JJ#WJJJJ#WJJjj#',
+  '..#JJ##JJJJ##JJjj#',
+  '..#JR##JJJJ##RJjj#',
+  '..#JJJJJ##JJJJjjj#',
+  '...#jJJJJJJJJjjj#.',
+  '....#jjjjjjjjjj#..',
+  '.....##########...',
+  '......#a#..#a#....',
+  '......###..###....',
 ];
 
 const ACORN_1 = [
-  '.......##.......',
-  '......#LL#......',
-  '....########....',
-  '...#aaaaaaaa#...',
-  '..#aaAAaaAAaa#..',
-  '..############..',
-  '..#SSSSSSSSSS#..',
-  '..#SS#SSSS#SS#..',
-  '..#SSRSSSSRSS#..',
-  '...#SSSSSSSS#...',
-  '...##BBBBBB##...',
-  '..#G#BBBBBB#L#..',
-  '....#AA#.#AA#...',
-  '....###...###...',
+  '.........##.......',
+  '........#aa#......',
+  '.....####aa####...',
+  '....#IIAAAAAAAA#..',
+  '...#IAAIAAIAAIAa#.',
+  '...#AaAAaAAaAAaa#.',
+  '...##############.',
+  '...#JJJJJJJJJJjj#.',
+  '..#JJ#WJJJJ#WJJjj#',
+  '..#JJ##JJJJ##JJjj#',
+  '..#JR##JJJJ##RJjj#',
+  '..#JJJJJ##JJJJjjj#',
+  '...#jJJJJJJJJjjj#.',
+  '....#jjjjjjjjjj#..',
+  '.....##########...',
+  '.....#a#....#a#...',
+  '.....###....###...',
 ];
 
-// Wisp Ghost (16x16)
+// Wisp ghost (18x16)
 const GHOST_0 = [
-  '.....######.....',
-  '...##PPPPPP##...',
-  '..#PPWWPPPPPP#..',
-  '.#PPPPPPPPPPPP#.',
-  '.#PPP#PPPP#PPP#.',
-  '.#PPPVPPPPvPPP#.',
-  '.#PPPPPPPPPPPP#.',
-  '.#PPppppppppPP#.',
-  '.#PppPPPPPPppP#.',
-  '..#p#.####.#p#..',
-  '..##........##..',
-  '................',
+  '..................',
+  '......######......',
+  '....##ZZPPPP##....',
+  '...#ZZZPPPPPPP#...',
+  '..#ZZWPPPPPPPPP#..',
+  '.#ZZWPPPPPPPPPPp#.',
+  '.#ZPP#WPPPP#WPPp#.',
+  '.#PPP##PPPP##PPp#.',
+  '.#PPP##PPPP##PPp#.',
+  '.#PRRPPP##PPPRRp#.',
+  '.#PPPPPPPPPPPPPp#.',
+  '.#PPPPPPPPPPPPpp#.',
+  '.#pPPPPPPPPPPppp#.',
+  '.#pppPpppppPpppp#.',
+  '..#pp##ppp##ppp#..',
+  '...##..###..###...',
 ];
 
 const GHOST_1 = [
-  '................',
-  '.....######.....',
-  '...##PPPPPP##...',
-  '..#PPWWPPPPPP#..',
-  '.#PPPPPPPPPPPP#.',
-  '.#PPP#PPPP#PPP#.',
-  '.#PPPVPPPPvPPP#.',
-  '.#PPPPPPPPPPPP#.',
-  '.#PPppppppppPP#.',
-  '..#pp#.##.#pp#..',
-  '...##......##...',
-  '................',
+  '......######......',
+  '....##ZZPPPP##....',
+  '...#ZZZPPPPPPP#...',
+  '..#ZZWPPPPPPPPP#..',
+  '.#ZZWPPPPPPPPPPp#.',
+  '.#ZPP#WPPPP#WPPp#.',
+  '.#PPP##PPPP##PPp#.',
+  '.#PPP##PPPP##PPp#.',
+  '.#PRRPPP##PPPRRp#.',
+  '.#PPPPPPPPPPPPPp#.',
+  '.#PPPPPPPPPPPPpp#.',
+  '.#pPPPPPPPPPPppp#.',
+  '.#ppppPppppPpppp#.',
+  '.#ppp##ppp##pp#...',
+  '..###..###..##....',
+  '..................',
 ];
 
-// Elite Mossy Stone Golem (20x20)
+// Cotton-candy piglet (18x15)
+const PIGLET_0 = [
+  '..##..........##..',
+  '.#Qq#........#qQ#.',
+  '.#QQq########qQQ#.',
+  '.#QyyyQQQQQQQQQq#.',
+  '#QyyWQQQQQQQQQQQq#',
+  '#QyQ#WQQQQQQ#WQQq#',
+  '#QQQ##QQQQQQ##QQq#',
+  '#QRRQQzzzzzzQRRQq#',
+  '#QQQQQzQzzQzQQQQq#',
+  '#qQQQQQzzzzQQQQqq#',
+  '.#qQQQQQQQQQQQqq#.',
+  '.#qqQQQQQQQQQqqq#.',
+  '..#qqqqqqqqqqqq#..',
+  '..#zz#.####.#zz#..',
+  '..###........###..',
+];
+
+const PIGLET_1 = [
+  '..##..........##..',
+  '.#Qq#........#qQ#.',
+  '.#QQq########qQQ#.',
+  '.#QyyyQQQQQQQQQq#.',
+  '#QyyWQQQQQQQQQQQq#',
+  '#QyQ#WQQQQQQ#WQQq#',
+  '#QQQ##QQQQQQ##QQq#',
+  '#QRRQQzzzzzzQRRQq#',
+  '#QQQQQzQzzQzQQQQq#',
+  '#qQQQQQzzzzQQQQqq#',
+  '.#qQQQQQQQQQQQqq#.',
+  '.#qqQQQQQQQQQqqq#.',
+  '..#qqqqqqqqqqqq#..',
+  '...#zz#....#zz#...',
+  '...####....####...',
+];
+
+// Spotted cap mushroom (18x16)
+const MUSHROOM_0 = [
+  '......######......',
+  '....##FFoFFF##....',
+  '...#FoWWFFFFFF#...',
+  '..#FoWWFFFFWWFFf#.',
+  '.#FFFFFFFFFFWWFff#',
+  '#FWWFFFFFFFFFFFff#',
+  '#fFFFFFWWFFFFFfff#',
+  '.##ffffffffffff##.',
+  '...#HHHHHHHHHHh#..',
+  '...#H#WHHHH#WHh#..',
+  '...#H##HHHH##Hh#..',
+  '...#RHHH##HHHRh#..',
+  '...#hHHHHHHHHhh#..',
+  '....#hhhhhhhh#....',
+  '....#hh#..#hh#....',
+  '....####..####....',
+];
+
+const MUSHROOM_1 = [
+  '......######......',
+  '....##FFoFFF##....',
+  '...#FoWWFFFFFF#...',
+  '..#FoWWFFFFWWFFf#.',
+  '.#FFFFFFFFFFWWFff#',
+  '#FWWFFFFFFFFFFFff#',
+  '#fFFFFFWWFFFFFfff#',
+  '.##ffffffffffff##.',
+  '...#HHHHHHHHHHh#..',
+  '...#H#WHHHH#WHh#..',
+  '...#H##HHHH##Hh#..',
+  '...#RHHH##HHHRh#..',
+  '...#hHHHHHHHHhh#..',
+  '....#hhhhhhhh#....',
+  '...#hh#....#hh#...',
+  '...####....####...',
+];
+
+// Elite mossy stone golem (22x16)
 const GOLEM_0 = [
-  '.......##..##.......',
-  '......#LL##LL#......',
-  '....############....',
-  '...#TTTTTTTTTTTT#...',
-  '..#TTLLTTTTTTLLTT#..',
-  '..#TTTTTTTTTTTTTT#..',
-  '.#TTT#O#TTTT#O#TTT#.',
-  '.#TTT###TTTT###TTT#.',
-  '.#TTTTTTTTTTTTTTTT#.',
-  '.#TTtTTTTTTTTTTtTT#.',
-  '#TTT#tttttttttt#TTT#',
-  '#TT##TTTTTTTTTT##TT#',
-  '#TT#.#TTttttTT#.#TT#',
-  '.##..#TT#..#TT#..##.',
-  '.....#tt#..#tt#.....',
-  '.....###....###.....',
+  '......##......##......',
+  '.....#LL#....#LL#.....',
+  '....##LLL####LLL##....',
+  '...#uuLLTTTTTTLLTTt#..',
+  '..#uuTTTTTTTTTTTTTTt#.',
+  '..#uTTT###TTTT###TTt#.',
+  '..#uTTT#O#TTTT#O#TTt#.',
+  '..#TTTT###TTTT###TTt#.',
+  '..#TTTTTTTT##TTTTTtt#.',
+  '.##TTLTTTTTTTTTTTLTt##',
+  '#uu#TTTTTTTTTTTTTt#tt#',
+  '#uT#tTTTTTTTTTTTtt#Tt#',
+  '#TT#tttttttttttttt#tt#',
+  '.##.#TTTT#..#TTTT#.##.',
+  '....#tttt#..#tttt#....',
+  '....######..######....',
 ];
 
 const GOLEM_1 = [
-  '.......##..##.......',
-  '......#LL##LL#......',
-  '....############....',
-  '...#TTTTTTTTTTTT#...',
-  '..#TTLLTTTTTTLLTT#..',
-  '..#TTTTTTTTTTTTTT#..',
-  '.#TTT#O#TTTT#O#TTT#.',
-  '.#TTT###TTTT###TTT#.',
-  '.#TTTTTTTTTTTTTTTT#.',
-  '.#TTtTTTTTTTTTTtTT#.',
-  '#TTT#tttttttttt#TTT#',
-  '.#TT#TTTTTTTTTT#TT#.',
-  '..##.#TTttttTT#.##..',
-  '....#TT#....#TT#....',
-  '....#tt#....#tt#....',
-  '....###......###....',
+  '......##......##......',
+  '.....#LL#....#LL#.....',
+  '....##LLL####LLL##....',
+  '...#uuLLTTTTTTLLTTt#..',
+  '..#uuTTTTTTTTTTTTTTt#.',
+  '..#uTTT###TTTT###TTt#.',
+  '..#uTTT#O#TTTT#O#TTt#.',
+  '..#TTTT###TTTT###TTt#.',
+  '..#TTTTTTTT##TTTTTtt#.',
+  '.##TTLTTTTTTTTTTTLTt##',
+  '#uu#TTTTTTTTTTTTTt#tt#',
+  '#uT#tTTTTTTTTTTTtt#Tt#',
+  '#TT#tttttttttttttt#tt#',
+  '.##..#TTTT#.#TTTT#.##.',
+  '.....#tttt#.#tttt#....',
+  '.....######.######....',
 ];
 
-// Bosses (22x22)
+// Boss: crowned king jelly
 const BOSS_JELLY_0 = [
-  '......##..##..##......',
-  '......#G##GG##G#......',
-  '......#GGGGGGGG#......',
-  '......##########......',
-  '....##MMMMMMMMMM##....',
-  '...#MMWWMMMMMMMMMM#...',
-  '..#MMWMMMMMMMMMMMMM#..',
-  '.#MMMMMMMMMMMMMMMMMM#.',
-  '.#MMMM##MMMMMM##MMMM#.',
-  '.#MMMM##MMMMMM##MMMM#.',
-  '.#MMRRMMMMMMMMMMRRMM#.',
-  '.#MMMMMMMMMMMMMMMMMM#.',
-  '.#MmmMMMMMMMMMMMMmmM#.',
-  '..#mmmmmmmmmmmmmmmm#..',
-  '...################...',
+  '.......#.....#.....#......',
+  '......#G#...#G#...#G#.....',
+  '......#GG###GYG###GG#.....',
+  '......#GGEGGGUGGGEGG#.....',
+  '......###############.....',
+  '....###NNMMMMMMMMMMM###...',
+  '...#NNNWWMMMMMMMMMMMMm#...',
+  '..#NNWWWMMMMMMMMMMMMMMm#..',
+  '.#NNWWMMMMMMMMMMMMMMMMMm#.',
+  '.#NMMMMMMMMMMMMMMMMMMMMm#.',
+  '#NMMMM#W#MMMMMMMM#W#MMMmm#',
+  '#MMMMM###MMMMMMMM###MMMmm#',
+  '#MMMMM###MMMMMMMM###MMMmm#',
+  '#MMRRRMMMMMM##MMMMMRRRMmm#',
+  '#MMMMMMMMMMMMMMMMMMMMMMmm#',
+  '#mMMMMMMMMMMMMMMMMMMMMmmm#',
+  '.#mmMMMMMMMMMMMMMMMMMmmn#.',
+  '..#nmmmmmmmmmmmmmmmmmnn#..',
+  '...###nnnnnnnnnnnnnnn###..',
+  '......###############.....',
 ];
 
+// Boss: ancient acorn general
 const BOSS_ACORN_0 = [
-  '....###........###....',
-  '...#GGG########GGG#...',
-  '....#LLLLLLLLLLLL#....',
-  '...##aaaaaaaaaaaa##...',
-  '..#aaAAaaAAaaAAaaAA#..',
-  '..##################..',
-  '..#SSSSSSSSSSSSSSSS#..',
-  '..#SSS#E#SSSS#E#SSS#..',
-  '..#SSS###SSSS###SSS#..',
-  '..#SSRRSSSSSSSSRRSS#..',
-  '...##GGGGGGGGGGGG##...',
-  '..#G#GGGBBBBBBGGG#G#..',
-  '.#G#.#GGGGGGGGGG#.#G#.',
-  '.##...#AA#..#AA#...##.',
-  '......###....###......',
+  '............##............',
+  '...........#GG#...........',
+  '.......####GGGG####.......',
+  '.....##GGYGGGGGGGGg##.....',
+  '....#GYYGGGGEGGGGGGgg#....',
+  '...#IIAAIAAIAAIAAIAAaa#...',
+  '...#AaAAaAAaAAaAAaAAaa#...',
+  '...####################...',
+  '....#JJJJJJJJJJJJJJjj#....',
+  '...#JJ##JJJJJJJJ##JJjj#...',
+  '...#J#EE#JJJJJJ#EE#Jjj#...',
+  '...#J####JJJJJJ####Jjj#...',
+  '...#JRRJJJJJJJJJJRRJjj#...',
+  '...#JJJ##########JJJjj#...',
+  '...#JJ#aaaa##aaaa#JJjj#...',
+  '....#jJ##########JJjj#....',
+  '..##G#jjjjjjjjjjjjjj#G##..',
+  '.#GG#GGGGGBBGGGGGGGg#GG#..',
+  '.#G#.#ggggggggggggg#.#G#..',
+  '.##...##############..##..',
+  '.......#aa#....#aa#.......',
+  '.......####....####.......',
 ];
 
+// Boss: twilight ghost king
 const BOSS_GHOST_0 = [
-  '.....##...##...##.....',
-  '.....#V###VV###V#.....',
-  '......#YYYYYYYY#......',
-  '....###PPPPPPPP###....',
-  '..##PPPPPPPPPPPPPP##..',
-  '.#PPPPWWPPPPPPPPPPPP#.',
-  '.#PPPPPPPPPPPPPPPPPP#.',
-  '.#PPPP#E#PPPP#E#PPPP#.',
-  '.#PPPP###PPPP###PPPP#.',
-  '.#PPPPPPPPPPPPPPPPPP#.',
-  '.#PPPppppppppppppPPP#.',
-  '.#PPpp#pppppppp#ppPP#.',
-  '..#p#..##pppp##..#p#..',
-  '..##.....####.....##..',
+  '.........#...#...#........',
+  '........#Y#.#Y#.#Y#.......',
+  '........#YY#YEY#YY#.......',
+  '........#YYYYYYYYY#.......',
+  '......###########.###.....',
+  '.....##ZZZPPPPPPPPPP##....',
+  '....#ZZZWPPPPPPPPPPPPp#...',
+  '...#ZZWWPPPPPPPPPPPPPpp#..',
+  '..#ZZWPPPPPPPPPPPPPPPPpp#.',
+  '..#ZPPP#W#PPPPPPP#W#PPpp#.',
+  '..#PPPP###PPPPPPP###PPpp#.',
+  '..#PPPP###PPPPPPP###PPpp#.',
+  '..#PRRRPPPPP###PPPPRRRpp#.',
+  '..#PPPPPPPP#VVV#PPPPPPpp#.',
+  '..#PPPPPPPPP###PPPPPPPpp#.',
+  '..#pPPPPPPPPPPPPPPPPPppp#.',
+  '..#ppPPPPPPPPPPPPPPPpppp#.',
+  '..#pppPppppPppppPppppppp#.',
+  '...#pp#ppp#ppp##pppp#pp#..',
+  '....##.###.###..####.##...',
 ];
 
+// Boss: ruinous forest lord
 const BOSS_FINAL_0 = [
-  '..##..............##..',
-  '.#EE#....####....#EE#.',
-  '.#VV#..##VVVV##..#VV#.',
-  '..#VV##VVVVVVVV##VV#..',
-  '..#VVVVVVVVVVVVVVVV#..',
-  '.#VVVV#E#VVVV#E#VVVV#.',
-  '.#VVVV#Y#VVVV#Y#VVVV#.',
-  '.#VVVVVVVVVVVVVVVVVV#.',
-  '.#VVvvVVVVVVVVVVvvVV#.',
-  '#VVV#GGGGGGGGGGGG#VVV#',
-  '#VV#.#VVvvVVvvVV#.#VV#',
-  '#VV#.#VVVVVVVVVV#.#VV#',
-  '.##...#VV#..#VV#...##.',
-  '......#vv#..#vv#......',
-  '......###....###......',
+  '.##....................##.',
+  '#EE#..................#EE#',
+  '#VV#.....########.....#VV#',
+  '.#VV#..##KkkkkkkK##..#VV#.',
+  '..#VV##kkKKKKKKKKkk##VV#..',
+  '...#VVKKKKKKKKKKKKKKVV#...',
+  '...#KKKKKKKKKKKKKKKKKK#...',
+  '..#KKKK##KKKKKKKK##KKKK#..',
+  '..#KKK#EE#KKKKKK#EE#KKK#..',
+  '..#KKK#EY#KKKKKK#YE#KKK#..',
+  '..#KKKK##KKKKKKKK##KKKK#..',
+  '..#KKKKKKKK#WW#KKKKKKKK#..',
+  '..#KKKKKKK#W##W#KKKKKKK#..',
+  '...#KKKKKKK####KKKKKKK#...',
+  '.##GGGGGGGGGEEGGGGGGGGGG##',
+  '#VV#GggggggggggggggggG#VV#',
+  '#VV##VVVVVVVVVVVVVVVV##VV#',
+  '.##.#VVvvVVVVVVVVvvVV#.##.',
+  '....#VVVVVVVVVVVVVVVV#....',
+  '....#vvvvvvvvvvvvvvvv#....',
+  '.....#VV#..####..#VV#.....',
+  '.....#vv#........#vv#.....',
+  '.....####........####.....',
 ];
 
 // Field Objects
@@ -554,14 +727,15 @@ const ICON_MATRICES: Record<WeaponId | PassiveId, string[]> = {
 };
 
 // ---------------------------------------------------------------------------
-// Hero: fisher apprentice (bandana, striped shirt, rubber apron, boots)
-// and the frozen tuna weapon. Original pixel art; frames are composed in code.
+// Hero: chibi fisher apprentice (red polka-dot bandana, striped shirt, orange
+// apron, boots) and the frozen tuna weapon. Original pixel art; frames are
+// composed in code. The tuna is drawn first so the body hides its tail lobes.
 // ---------------------------------------------------------------------------
 
 const HERO_PALETTE: Record<string, string> = {
   '#': '#24182b',
-  'K': '#3a2a26',
-  'k': '#5b4038',
+  'K': '#4a3328',
+  'k': '#6e4c3a',
   'S': '#ffd8be',
   's': '#f0b08e',
   'R': '#e63946',
@@ -571,150 +745,121 @@ const HERO_PALETTE: Record<string, string> = {
   'b': '#3b7fb8',
   'O': '#ffb238',
   'o': '#d9822b',
-  'T': '#5c677d',
-  't': '#3e4a5e',
+  'T': '#3f5a8a',
+  't': '#2c4068',
   'L': '#4caf6a',
   'l': '#2f7a48',
-  'E': '#24182b',
   'P': '#ff8fa3',
+  'E': '#24182b',
 };
 
 const TUNA_PALETTE: Record<string, string> = {
   '#': '#1a2236',
-  'N': '#2f5d9e',
-  'n': '#1d3b6e',
-  'C': '#6fa8dc',
-  'I': '#e3edf6',
-  'i': '#a9bacd',
-  'Y': '#fde047',
+  'N': '#2c4f8a',
+  'n': '#1d3566',
+  'C': '#5b9bd5',
+  'I': '#eef4fa',
+  'i': '#b4c4d6',
+  'Y': '#fcd34d',
   'W': '#ffffff',
-  'F': '#c4f1ff',
+  'F': '#d6f3ff',
   'E': '#0f172a',
 };
 
-// 22px wide head rows (facing right)
+// 22px wide head (facing right)
 const HERO_HEAD = [
   '.......########.......',
-  '.....##RRRWRRRR##.....',
-  '....#RRWRRRRRRWRR#....',
-  '...#RRRRRRRRRRRRRR#...',
-  '..##rrrrrrrrrrrrrr#...',
-  '.#Rr#KKkKKSSSSSSSS#...',
-  '#RR##KKKSSSSSSSSSSS#..',
-  '.#r#.#KSSSSSSS#SSSS#..',
-  '.##..#KSSSSSSS#SSSS#..',
-  '.....#SSSSSSSSESSSSS#.',
-  '.....#SSSSPPSSSSSPSS#.',
-  '......#sSSSSSSSSSSS#..',
-  '.......##ssSSSSss##...',
-  '.........##ssss##.....',
+  '.....##RRRRRRRR##.....',
+  '....#RRRWRRRRRWRRR#...',
+  '...#RRWRRRRRRRRRRRR#..',
+  '..#rRRRRRRRRRRRRRRRR#.',
+  '..#rrrrrrrrrrrrrrrrr#.',
+  '.#R#KKKkKKKSSKKSSSSS#.',
+  '#Rr#KKkSSSSSSSSSSSSSS#',
+  '#rR#KKSSSSSS#WSSS#WSS#',
+  '.##.#KSSSSSS##SSS##SS#',
+  '....#KSSSSSS##SSS##SS#',
+  '....#SSSSSSPPSSSSSPPS#',
+  '.....#SSSSSSSSSrSSSS#.',
+  '......##sSSSSSSSSss#..',
+  '........##########....',
 ];
 
-// Torso: arms at sides
+// Torso: front hand at hip holding the tuna
 const HERO_BODY = [
-  '........#BWBWBWB#.....',
-  '.......#BWOOOOOOW#....',
-  '......#BW#OOOOOO#BW#..',
-  '......#SS#OOWOOO#SS#..',
-  '.......##bOOOOOOb##...',
-  '.........#OOOOOO#.....',
-  '.........#oOOOOo#.....',
-  '.........#oooooo#.....',
+  '.........#BWBWB#......',
+  '.......##BWBWBWB##....',
+  '......#BW#OOOOO#WB#...',
+  '......#BW#OOWOO#WB#...',
+  '......#SS#OOOOO#SS#...',
+  '.......##bOOOOOb##....',
+  '........#oOOOOOo#.....',
+  '........#ooooooo#.....',
 ];
 
-// Torso: arms thrust forward for the swing
+// Torso: front arm raised to shoulder for the swing
 const HERO_BODY_SWING = [
-  '........#BWBWBWB#.....',
-  '.......#BWOOOOOOWBWB#.',
-  '.......#BOOOOOOOBWBSS#',
-  '.......#bOOWOOOO#####.',
-  '........#bOOOOOOb#....',
-  '.........#OOOOOO#.....',
-  '.........#oOOOOo#.....',
-  '.........#oooooo#.....',
+  '.........#BWBWB#####..',
+  '.......##BWBWBWBWBSS#.',
+  '......#BW#OOOOO#####..',
+  '......#BW#OOWOO#......',
+  '......#SS#OOOOO#......',
+  '.......##bOOOOOb#.....',
+  '........#oOOOOOo#.....',
+  '........#ooooooo#.....',
 ];
 
-// hero legs idle
 const HERO_LEGS_IDLE = [
-  '.........#TT##TT#.....',
-  '.........#TT##TT#.....',
-  '........#LLL##LLL#....',
-  '........#LLL##LLL#....',
-  '........#lllL#lllL#...',
+  '.........#TT#TT#......',
+  '.........#TT#TT#......',
+  '........#LLL#LLL#.....',
+  '........#lll#lll#.....',
   '........#########.....',
 ];
 
-// hero legs walk a
 const HERO_LEGS_WALK_A = [
-  '.........#TT#TT#......',
-  '........#TT#..#TT#....',
-  '.......#LLL#..#LLL#...',
-  '.......#LLL#..#LLL#...',
-  '......#lllL#...#lllL#.',
-  '......######...######.',
+  '........#TT#.#TT#.....',
+  '.......#TT#...#TT#....',
+  '......#LLL#...#LLL#...',
+  '......#lll#...#lll#...',
+  '......#####...#####...',
 ];
 
-// hero legs walk b
 const HERO_LEGS_WALK_B = [
-  '..........#TTTT#......',
-  '..........#TTTT#......',
-  '.........#LLLLL#......',
-  '.........#LLLLL#......',
-  '.........#lllllL#.....',
-  '.........########.....',
+  '.........#TTTTT#......',
+  '..........#TTT#.......',
+  '.........#LLLL#.......',
+  '.........#llll#.......',
+  '.........######.......',
 ];
 
-// 32x15 frozen tuna, head facing right
+// 33x13 frozen tuna, head facing right; peduncle (grip) at x=7, y=6
 const FROZEN_TUNA = [
-  '................#n#.............',
-  '.#..........#..#nnn#............',
-  '#n#.......##Y##nnnnn#...........',
-  '#Nn#....##Ynnnnnnnnnn####.......',
-  '.#Nn#..#YnnnWNNNNNFnnnnFn###....',
-  '..#Nn##nnNFNNNNNNNNNNNNNNnnW#...',
-  '...#Nn#NNNNCCCCCCCCCCCNNnNNWE##.',
-  '...#NNCCCCCCCCCCCCCCCnnCiCCCCCn#',
-  '...#Ii#IIIIIIIIIIIIFnnIIiIIIi##.',
-  '..#Ii##iiIIIIIFIIIIIIIIIiiF##...',
-  '.#Ii#..#Yiiiiiiiiiiiiiii###.....',
-  '#Ii#....##Y#iiiiiiii####........',
-  '#i#.......##Y#######............',
-  '.#..........#...................',
-  '................................',
+  '..##............#n#..............',
+  '.#NN#..........#nnn##............',
+  '..#NN#......#Y#NNNNNN####........',
+  '...#NN#...#YNNNNNNNFNNNNN####....',
+  '....#NN##YNNNFNNNNNNNNNNNnNNE#...',
+  '.....#NNNNNNNNNNNNNNNNNNnNNWEN##.',
+  '......#nCCCCCCCCCCCCCCCCnCCCCCCC#',
+  '.....#iiiiFIIIIFIIIICCIIiIIIIiii#',
+  '....#ii##YiiIIIIIIIIIFIIIiiii###.',
+  '...#ii#...#YiiiIIIIIIIiiii###....',
+  '..#ii#......#Y#iiiiiii####.......',
+  '.#ii#..........##ii###...........',
+  '..##.............##..............',
 ];
 
-// 30x25 frozen tuna carried diagonally over the shoulder
-const FROZEN_TUNA_DIAGONAL = [
-  '............................#.',
-  '........................####n#',
-  '.............#......####WWECn#',
-  '............#n####.#FnNnNWC##.',
-  '.............#nnnn#nnNnNCCIi#.',
-  '............#nnnnnnNNNNiCI##..',
-  '............#nnnFnNNCnCiiiF#..',
-  '..........#.#nnNNNCCCnIIi##...',
-  '.........#Y#nNNNNCCCnnIIi#....',
-  '.........#nnNNNCCCCFFIii#.....',
-  '........#YnnNNCCCIIIIii#......',
-  '........#nnNCCCCIIIiii#.......',
-  '.......#YNNNCCCIFIiii#........',
-  '.#.....#nnNCCIIIFiii#.........',
-  '#n######NNCCIIIiiii#..........',
-  '.#NNnnnnCCIIIIiii##...........',
-  '..####NNC#IiiiY#Y#............',
-  '......#Ii#i#Y##.#.............',
-  '......#Ii##.#.................',
-  '......#I#.....................',
-  '......#I#.....................',
-  '......#i#.....................',
-  '......#i#.....................',
-  '......#i#.....................',
-  '.......#......................',
-];
-
-const HERO_CANVAS_W = 80;
-const HERO_CANVAS_H = 36;
-const HERO_HEAD_Y = 8; // body sits below the raised tuna
+const HERO_CANVAS_W = 32;
+const HERO_CANVAS_H = 30;
+const HERO_HEAD_Y = 1;
+const HERO_X = HERO_CANVAS_W / 2 - 11;
+const HERO_BODY_Y = HERO_HEAD_Y + 15; // HERO_HEAD has 15 rows
+/** Pixel coords (in the tuna matrix) of the grip point on the tail stalk. */
+const TUNA_GRIP = { x: 7.5, y: 6.5 };
+/** Hand pivot points (in hero frame pixels) the tuna rotates around. */
+const HAND_IDLE = { x: HERO_X + 17, y: HERO_BODY_Y + 4.5 };
+const HAND_SWING = { x: HERO_X + 19, y: HERO_BODY_Y + 1.5 };
 
 function blitMatrix(
   ctx: CanvasRenderingContext2D,
@@ -734,24 +879,20 @@ function blitMatrix(
   }
 }
 
-/** Compose one hero frame (facing right, centered horizontally, feet on the bottom row). */
+/**
+ * Compose one hero frame (facing right, centered horizontally, feet on the bottom row).
+ * The tuna is NOT baked in: the engine draws it rotated around the hand pivot so it
+ * can actually be swung.
+ */
 function composeHeroFrame(kind: 'idle' | 'walkA' | 'walkB' | 'swing'): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = HERO_CANVAS_W;
   c.height = HERO_CANVAS_H;
   const ctx = c.getContext('2d')!;
-  const hx = HERO_CANVAS_W / 2 - 11;
-  const hy = HERO_HEAD_Y;
-  if (kind === 'swing') {
-    blitMatrix(ctx, [...HERO_HEAD, ...HERO_BODY_SWING, ...HERO_LEGS_WALK_A], HERO_PALETTE, hx, hy);
-    blitMatrix(ctx, FROZEN_TUNA, TUNA_PALETTE, hx + 19, hy + 9);
-    blitMatrix(ctx, ['#SS#', '#SS#'], HERO_PALETTE, hx + 19, hy + 15);
-  } else {
-    const legs =
-      kind === 'walkA' ? HERO_LEGS_WALK_A : kind === 'walkB' ? HERO_LEGS_WALK_B : HERO_LEGS_IDLE;
-    blitMatrix(ctx, FROZEN_TUNA_DIAGONAL, TUNA_PALETTE, hx - 1, 2);
-    blitMatrix(ctx, [...HERO_HEAD, ...HERO_BODY, ...legs], HERO_PALETTE, hx, hy);
-  }
+  const body = kind === 'swing' ? HERO_BODY_SWING : HERO_BODY;
+  const legs =
+    kind === 'walkB' ? HERO_LEGS_WALK_B : kind === 'idle' ? HERO_LEGS_IDLE : HERO_LEGS_WALK_A;
+  blitMatrix(ctx, [...HERO_HEAD, ...body, ...legs], HERO_PALETTE, HERO_X, HERO_HEAD_Y);
   return c;
 }
 
@@ -759,6 +900,7 @@ function buildHeroSheet(): HeroSheetFrames {
   const idle = composeHeroFrame('idle');
   const walk = [composeHeroFrame('walkA'), composeHeroFrame('walkB')];
   const swing = composeHeroFrame('swing');
+  const tuna = renderMatrixToCanvas(FROZEN_TUNA, TUNA_PALETTE);
   return {
     idle,
     idleFlash: makeWhiteMask(idle),
@@ -767,6 +909,11 @@ function buildHeroSheet(): HeroSheetFrames {
     swing,
     swingFlash: makeWhiteMask(swing),
     baseHeight: HERO_CANVAS_H,
+    tuna,
+    tunaFlash: makeWhiteMask(tuna),
+    tunaGrip: TUNA_GRIP,
+    handIdle: HAND_IDLE,
+    handSwing: HAND_SWING,
   };
 }
 
@@ -991,6 +1138,14 @@ export interface HeroSheetFrames {
   swing: HTMLCanvasElement;
   swingFlash: HTMLCanvasElement;
   baseHeight: number;
+  /** Frozen tuna weapon (head facing right), drawn separately so it can rotate. */
+  tuna: HTMLCanvasElement;
+  tunaFlash: HTMLCanvasElement;
+  /** Grip point inside the tuna sprite (pixels). */
+  tunaGrip: { x: number; y: number };
+  /** Hand pivot inside the idle/walk and swing frames (pixels). */
+  handIdle: { x: number; y: number };
+  handSwing: { x: number; y: number };
 }
 
 export interface SpriteBank {
@@ -1020,7 +1175,7 @@ export function getSpriteBank(): SpriteBank {
   if (cachedBank) return cachedBank;
 
   const makePair = (matrices: string[][]): SpriteFramePair => {
-    const frames = matrices.map((m) => renderMatrixToCanvas(m));
+    const frames = matrices.map((m) => renderMatrixToCanvas(m, MOB_PALETTE));
     const flashFrames = frames.map(makeWhiteMask);
     return { frames, flashFrames };
   };
@@ -1038,6 +1193,8 @@ export function getSpriteBank(): SpriteBank {
       jelly: makePair([JELLY_0, JELLY_1]),
       acorn: makePair([ACORN_0, ACORN_1]),
       ghost: makePair([GHOST_0, GHOST_1]),
+      piglet: makePair([PIGLET_0, PIGLET_1]),
+      mushroom: makePair([MUSHROOM_0, MUSHROOM_1]),
       golem: makePair([GOLEM_0, GOLEM_1]),
       boss_jelly: makePair([BOSS_JELLY_0]),
       boss_acorn: makePair([BOSS_ACORN_0]),

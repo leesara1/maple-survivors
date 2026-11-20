@@ -26,6 +26,8 @@ export type MonsterKind =
   | 'jelly'
   | 'acorn'
   | 'ghost'
+  | 'piglet'
+  | 'mushroom'
   | 'golem'
   | 'boss_jelly'
   | 'boss_acorn'
