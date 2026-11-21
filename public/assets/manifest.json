@@ -1,0 +1,30 @@
+{
+  "source": "Official MapleStory GMS WZ via maplestory.io",
+  "region": "GMS",
+  "version": "250",
+  "frozenTuna": {
+    "id": 1442039,
+    "name": "Frozen Tuna",
+    "nameKo": "냉동참치",
+    "type": "Pole Arm",
+    "attackMotion": "swingPF"
+  },
+  "defaultAvatar": {
+    "skin": 2000,
+    "face": 20003,
+    "faceName": "남자얼굴4",
+    "hair": 30330,
+    "hairName": "바닐라보이헤어",
+    "top": 1040014,
+    "topName": "주황색 스포츠 티셔츠(남)",
+    "bottom": 1062015,
+    "bottomName": "찢어진 청바지",
+    "shoes": 1072153,
+    "shoesName": "투명 신발",
+    "cape": 1102039,
+    "capeName": "투명 망토",
+    "earring": 1032036,
+    "earringName": "십자 비즈 귀걸이",
+    "weapon": 1442039
+  }
+}

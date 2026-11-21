@@ -1,6 +1,6 @@
 {
-  "name": "푸른숲 소드 서바이버",
-  "description": "귀엽고 밝은 2D 도트 그래픽의 탑다운 서바이버즈라이크 생존 로그라이트 게임",
+  "name": "메이플 서바이버",
+  "description": "메이플스토리 에셋을 사용한 탑다운 서바이버즈라이크 생존 로그라이트 게임",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

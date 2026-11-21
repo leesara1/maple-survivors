@@ -80,11 +80,6 @@ class SoundEngine {
     this.tone(520, 780, 0.1, 'sine', 0.06);
   }
 
-  public playArrow(): void {
-    if (!this.canPlay('arrow', 85)) return;
-    this.tone(680, 260, 0.06, 'triangle', 0.05);
-  }
-
   public playHoly(): void {
     if (!this.canPlay('holy', 140)) return;
     this.tone(660, 990, 0.18, 'sine', 0.07);

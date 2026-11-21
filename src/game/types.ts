@@ -11,7 +11,6 @@ export type WeaponId =
   | 'greatsword'
   | 'shuriken'
   | 'orb'
-  | 'arrow'
   | 'shield'
   | 'holy';
 

@@ -7,7 +7,9 @@ import { TitleScreen } from './components/TitleScreen';
 import { CONFIG } from './game/config';
 import { GameEngine } from './game/engine';
 import { HudSnapshot } from './game/types';
-import { getUiIcons } from './game/sprites';
+import { fetchHeroSheet } from './game/avatar';
+import type { AvatarConfig } from './game/avatar';
+import { getUiIcons, loadSpriteBank, setHeroSheet } from './game/sprites';
 
 const INITIAL_HUD: HudSnapshot = {
   phase: 'TITLE',
@@ -42,6 +44,9 @@ export default function App() {
   const touchOriginRef = useRef<{ id: number; x: number; y: number } | null>(null);
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
+  const [assetsReady, setAssetsReady] = useState(false);
+  const [assetError, setAssetError] = useState<string | null>(null);
+  const [previewVersion, setPreviewVersion] = useState(0);
   const [touchStick, setTouchStick] = useState<{
     cx: number;
     cy: number;
@@ -54,23 +59,12 @@ export default function App() {
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const engine = new GameEngine(canvas, (snapshot) => {
-      setHud(snapshot);
-    });
-    engineRef.current = engine;
-
-    const handleResize = () => {
-      if (!container) return;
-      engine.resize(container.clientWidth, container.clientHeight);
-    };
-    handleResize();
-
-    const resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(container);
-
-    engine.start();
+    let cancelled = false;
+    let engine: GameEngine | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (!engine) return;
       if (
         e.code === 'ArrowUp' ||
         e.code === 'ArrowDown' ||
@@ -109,23 +103,56 @@ export default function App() {
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      engine.setKey(e.code, false);
+      engine?.setKey(e.code, false);
     };
 
     const onBlur = () => {
-      engine.clearKeys();
+      engine?.clearKeys();
     };
 
-    window.addEventListener('keydown', onKeyDown, { passive: false });
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('blur', onBlur);
+    (async () => {
+      try {
+        const sprites = await loadSpriteBank();
+        if (cancelled) return;
+
+        engine = new GameEngine(
+          canvas,
+          (snapshot) => {
+            setHud(snapshot);
+          },
+          sprites
+        );
+        engineRef.current = engine;
+
+        const handleResize = () => {
+          if (!container || !engine) return;
+          engine.resize(container.clientWidth, container.clientHeight);
+        };
+        handleResize();
+
+        resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(container);
+
+        engine.start();
+        setAssetsReady(true);
+
+        window.addEventListener('keydown', onKeyDown, { passive: false });
+        window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('blur', onBlur);
+      } catch (err) {
+        if (!cancelled) {
+          setAssetError(err instanceof Error ? err.message : '에셋 로드 실패');
+        }
+      }
+    })();
 
     return () => {
-      resizeObserver.disconnect();
+      cancelled = true;
+      resizeObserver?.disconnect();
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onBlur);
-      engine.destroy();
+      engine?.destroy();
       engineRef.current = null;
     };
   }, []);
@@ -178,11 +205,19 @@ export default function App() {
     }
   };
 
-  const uiIcons = getUiIcons();
-  const cursorVars = {
-    '--pixel-cursor-default': `url("${uiIcons.cursorDefault}") 1 1, auto`,
-    '--pixel-cursor-pointer': `url("${uiIcons.cursorPointer}") 9 1, pointer`,
-  } as React.CSSProperties;
+  const handleApplyAvatar = async (config: AvatarConfig) => {
+    const sheet = await fetchHeroSheet(config);
+    setHeroSheet(sheet);
+    engineRef.current?.setHeroSheet(sheet);
+    setPreviewVersion((v) => v + 1);
+  };
+
+  const uiIcons = assetsReady ? getUiIcons() : null;
+  const cursorVars = uiIcons
+    ? ({
+        cursor: 'auto',
+      } as React.CSSProperties)
+    : undefined;
 
   return (
     <div
@@ -199,6 +234,19 @@ export default function App() {
         className="block w-full h-full pixelated touch-none"
       />
 
+      {!assetsReady && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0e1b2e] text-sky-100 gap-3">
+          <img
+            src="/assets/ui/maple_leaf.png"
+            alt=""
+            className="w-12 h-12 pixelated animate-pulse"
+          />
+          <p className="font-display text-xl tracking-wide">
+            {assetError ? `로드 실패: ${assetError}` : '메이플 에셋 불러오는 중…'}
+          </p>
+        </div>
+      )}
+
       {/* Virtual Touch Joystick Overlay (only visible while dragging on touch devices) */}
       {touchStick && hud.phase === 'PLAYING' && (
         <div
@@ -214,15 +262,17 @@ export default function App() {
         </div>
       )}
 
-      {hud.phase === 'TITLE' && (
+      {assetsReady && hud.phase === 'TITLE' && (
         <TitleScreen
           onStart={() => engineRef.current?.startNewRun()}
           muted={hud.muted}
           onToggleMute={() => engineRef.current?.toggleMute()}
+          onApplyAvatar={handleApplyAvatar}
+          previewVersion={previewVersion}
         />
       )}
 
-      {hud.phase !== 'TITLE' && (
+      {assetsReady && hud.phase !== 'TITLE' && (
         <GameHUD
           hud={hud}
           onTogglePause={() => engineRef.current?.togglePause()}
@@ -230,7 +280,7 @@ export default function App() {
         />
       )}
 
-      {hud.phase === 'LEVEL_UP' && (
+      {assetsReady && hud.phase === 'LEVEL_UP' && (
         <LevelUpModal
           level={hud.level}
           choices={hud.upgradeChoices}
@@ -238,14 +288,14 @@ export default function App() {
         />
       )}
 
-      {hud.phase === 'CHEST' && hud.chestReward && (
+      {assetsReady && hud.phase === 'CHEST' && hud.chestReward && (
         <ChestModal
           reward={hud.chestReward}
           onClose={() => engineRef.current?.closeChestModal()}
         />
       )}
 
-      {hud.phase === 'PAUSED' && (
+      {assetsReady && hud.phase === 'PAUSED' && (
         <PauseModal
           hud={hud}
           onResume={() => engineRef.current?.togglePause()}
@@ -253,7 +303,7 @@ export default function App() {
         />
       )}
 
-      {(hud.phase === 'GAME_OVER' || hud.phase === 'VICTORY') && (
+      {assetsReady && (hud.phase === 'GAME_OVER' || hud.phase === 'VICTORY') && (
         <EndGameModal
           victory={hud.phase === 'VICTORY'}
           hud={hud}

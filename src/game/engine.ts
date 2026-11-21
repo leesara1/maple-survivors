@@ -46,7 +46,7 @@ interface MonsterSlot {
 interface ProjectileSlot {
   active: boolean;
   weaponId: WeaponId;
-  style: 'shuriken' | 'orb' | 'arrow' | 'sword_wave' | 'arrow_rain';
+  style: 'shuriken' | 'orb' | 'sword_wave';
   x: number;
   y: number;
   vx: number;
@@ -205,7 +205,7 @@ export class GameEngine {
     coins: 0,
     shieldAngle: 0,
     fishSwingTimer: 0,
-    fishSwingDuration: 0.3,
+    fishSwingDuration: 0.52, // polearm (Frozen Tuna) — very slow swing
     /** True when the swing should spin the tuna a full circle (front + back cleave). */
     fishSwingSpin: false,
   };
@@ -232,7 +232,11 @@ export class GameEngine {
   // Title attract-mode entities
   private titleTime = 0;
 
-  constructor(canvas: HTMLCanvasElement, onHudUpdate: (snapshot: HudSnapshot) => void) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    onHudUpdate: (snapshot: HudSnapshot) => void,
+    sprites?: SpriteBank
+  ) {
     this.canvas = canvas;
     const context = canvas.getContext('2d', { alpha: false });
     if (!context) {
@@ -240,12 +244,17 @@ export class GameEngine {
     }
     this.ctx = context;
     this.ctx.imageSmoothingEnabled = false;
-    this.sprites = getSpriteBank();
+    this.sprites = sprites ?? getSpriteBank();
     this.grid = new SpatialGrid(CONFIG.GAME.GRID_CELL_SIZE);
     this.onHudUpdate = onHudUpdate;
 
     this.allocatePools();
     this.resetWorldForTitle();
+  }
+
+  /** Replace hero paper-doll after cody apply (keeps monsters/items). */
+  setHeroSheet(sheet: SpriteBank['heroSheet']): void {
+    this.sprites.heroSheet = sheet;
   }
 
   private allocatePools(): void {
@@ -890,9 +899,6 @@ export class GameEngine {
         case 'orb':
           this.fireOrb(owned, stats, mightMult);
           break;
-        case 'arrow':
-          this.fireArrows(owned, stats, mightMult);
-          break;
         case 'holy':
           this.fireHolyLight(owned, stats, mightMult);
           break;
@@ -1051,63 +1057,6 @@ export class GameEngine {
         explosionRadius: owned.evolved ? stats.area : 0,
         targetIdx,
       });
-    }
-  }
-
-  private fireArrows(
-    owned: OwnedWeapon,
-    stats: typeof CONFIG.WEAPONS.arrow.evolvedStats,
-    mightMult: number
-  ): void {
-    sound.playArrow();
-    const baseAngle = Math.atan2(this.player.moveDirY, this.player.moveDirX);
-    const dmg = stats.damage * mightMult;
-    const spreadStep = owned.evolved ? 0.11 : 0.14;
-
-    for (let i = 0; i < stats.count; i++) {
-      const offset = (i - (stats.count - 1) * 0.5) * spreadStep;
-      const ang = baseAngle + offset;
-
-      this.spawnProjectile({
-        weaponId: 'arrow',
-        style: 'arrow',
-        x: this.player.x,
-        y: this.player.y,
-        vx: Math.cos(ang) * stats.speed,
-        vy: Math.sin(ang) * stats.speed,
-        radius: stats.area,
-        damage: dmg,
-        critChance: stats.critChance,
-        pierceLeft: stats.pierce,
-        maxLife: 1.35,
-        evolved: owned.evolved,
-        explosionRadius: 0,
-        targetIdx: -1,
-      });
-    }
-
-    // Evolved Arrow Rain drops extra arrows from above onto nearby clusters!
-    if (owned.evolved) {
-      const targets = this.findNearestMonsters(this.player.x, this.player.y, 440, 3);
-      for (let t = 0; t < targets.length; t++) {
-        const m = this.monsters[targets[t]];
-        this.spawnProjectile({
-          weaponId: 'arrow',
-          style: 'arrow_rain',
-          x: m.x + (Math.random() - 0.5) * 40,
-          y: m.y - 260,
-          vx: 0,
-          vy: 780,
-          radius: 26,
-          damage: dmg * 1.15,
-          critChance: stats.critChance,
-          pierceLeft: 12,
-          maxLife: 0.55,
-          evolved: true,
-          explosionRadius: 0,
-          targetIdx: -1,
-        });
-      }
     }
   }
 
@@ -2278,10 +2227,11 @@ export class GameEngine {
     const facingRight = Math.cos(t * 0.4) >= 0;
     const hop = Math.abs(Math.sin(t * 7)) * 4;
 
+    const heroScale = CONFIG.PLAYER.DRAW_SCALE;
     // Shadow
     ctx.fillStyle = 'rgba(25, 45, 25, 0.25)';
     ctx.beginPath();
-    ctx.ellipse(px, py + 28, 20, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(px, py + 16, 14, 5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
@@ -2290,31 +2240,32 @@ export class GameEngine {
       const sheet = this.sprites.heroSheet;
       const frame = sheet.walk[Math.floor(t * 6) % sheet.walk.length];
       if (!facingRight) ctx.scale(-1, 1);
-      // integer scale keeps title hero pixels crisp
-      this.drawHeroWithTuna(ctx, frame, sheet.tuna, sheet.handIdle, 3, 28, -0.35 + Math.sin(t * 6) * 0.1);
+      this.drawHeroFrame(ctx, frame, heroScale, 16);
     }
     ctx.restore();
 
-    // Cute orbiting jellies & acorns around the title meadow
-    const critters: Array<{ kind: MonsterKind; r: number; spd: number; phase: number }> = [
-      { kind: 'jelly', r: 170, spd: 0.4, phase: 0 },
-      { kind: 'piglet', r: 210, spd: 0.32, phase: 2.1 },
-      { kind: 'acorn', r: 190, spd: -0.45, phase: 1.0 },
-      { kind: 'ghost', r: 240, spd: 0.28, phase: 4.0 },
-      { kind: 'mushroom', r: 265, spd: -0.24, phase: 5.2 },
+    // Orbiting MapleStory monsters around the title meadow
+    const critters: Array<{ kind: MonsterKind; r: number; spd: number; phase: number; scale: number }> = [
+      { kind: 'jelly', r: 170, spd: 0.4, phase: 0, scale: 0.8 },
+      { kind: 'piglet', r: 210, spd: 0.32, phase: 2.1, scale: 0.8 },
+      { kind: 'acorn', r: 190, spd: -0.45, phase: 1.0, scale: 1.3 },
+      { kind: 'ghost', r: 240, spd: 0.28, phase: 4.0, scale: 0.62 },
+      { kind: 'mushroom', r: 265, spd: -0.24, phase: 5.2, scale: 0.76 },
     ];
     for (const c of critters) {
       const ang = t * c.spd + c.phase;
       const mx = Math.cos(ang) * c.r;
       const my = Math.sin(ang) * (c.r * 0.65);
-      const hop = Math.abs(Math.sin(t * 5 + c.phase)) * 8;
+      const hopY = Math.abs(Math.sin(t * 5 + c.phase)) * 8;
       const frames = this.sprites.monsters[c.kind].frames;
       const spr = frames[Math.floor(t * 4) % frames.length];
+      const w = spr.width * c.scale;
+      const h = spr.height * c.scale;
       ctx.fillStyle = 'rgba(25, 45, 25, 0.22)';
       ctx.beginPath();
-      ctx.ellipse(mx, my + 16, 14, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, my + 16, Math.max(10, w * 0.28), 5, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.drawImage(spr, mx - spr.width * 1.2, my - spr.height * 1.2 - hop, spr.width * 2.4, spr.height * 2.4);
+      ctx.drawImage(spr, mx - w / 2, my - h / 2 - hopY, w, h);
     }
   }
 
@@ -2361,8 +2312,8 @@ export class GameEngine {
       ctx.fill();
 
       const spr = this.sprites.crate;
-      const w = spr.width * 2.2;
-      const h = spr.height * 2.2;
+      const w = spr.width * 1.2;
+      const h = spr.height * 1.2;
       ctx.drawImage(spr, Math.round(c.x - w / 2), Math.round(c.y - h / 2), Math.round(w), Math.round(h));
       if (c.hitFlash > 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.6)';
@@ -2381,18 +2332,18 @@ export class GameEngine {
       switch (pk.kind) {
         case 'exp_small':
           spr = this.sprites.expSmall;
-          w = Math.round(spr.width * 1.7);
-          h = Math.round(spr.height * 1.7);
+          w = Math.round(spr.width * 1.0);
+          h = Math.round(spr.height * 1.0);
           break;
         case 'exp_medium':
           spr = this.sprites.expMedium;
-          w = Math.round(spr.width * 2.0);
-          h = Math.round(spr.height * 2.0);
+          w = Math.round(spr.width * 1.15);
+          h = Math.round(spr.height * 1.15);
           break;
         case 'exp_large':
           spr = this.sprites.expLarge;
-          w = Math.round(spr.width * 2.3);
-          h = Math.round(spr.height * 2.3);
+          w = Math.round(spr.width * 1.3);
+          h = Math.round(spr.height * 1.3);
           break;
         case 'coin': {
           spr =
@@ -2403,30 +2354,30 @@ export class GameEngine {
                 : pk.value >= 2
                   ? this.sprites.coinSilver
                   : this.sprites.coinBronze;
-          const targetH = pk.value >= 10 ? 28 : pk.value >= 5 ? 25 : pk.value >= 2 ? 22 : 20;
+          const targetH = pk.value >= 10 ? 20 : pk.value >= 5 ? 18 : pk.value >= 2 ? 16 : 14;
           h = targetH;
           w = Math.round(targetH * (spr.width / Math.max(1, spr.height)));
           break;
         }
         case 'potion':
           spr = this.sprites.potion;
-          w = Math.round(spr.width * 2.3);
-          h = Math.round(spr.height * 2.3);
+          w = Math.round(spr.width * 1.15);
+          h = Math.round(spr.height * 1.15);
           break;
         case 'magnet_all':
           spr = this.sprites.magnetAll;
-          w = Math.round(spr.width * 2.3);
-          h = Math.round(spr.height * 2.3);
+          w = Math.round(spr.width * 1.15);
+          h = Math.round(spr.height * 1.15);
           break;
         case 'bomb':
           spr = this.sprites.bomb;
-          w = Math.round(spr.width * 2.3);
-          h = Math.round(spr.height * 2.3);
+          w = Math.round(spr.width * 1.15);
+          h = Math.round(spr.height * 1.15);
           break;
         case 'chest':
           spr = this.sprites.chest;
-          w = Math.round(spr.width * 2.6);
-          h = Math.round(spr.height * 2.6);
+          w = Math.round(spr.width * 1.4);
+          h = Math.round(spr.height * 1.4);
           break;
       }
 
@@ -2477,9 +2428,6 @@ export class GameEngine {
 
       ctx.save();
       ctx.translate(Math.round(m.x), Math.round(m.y - hop));
-      if (m.kind === 'ghost' || m.kind === 'boss_ghost') {
-        ctx.globalAlpha = 0.82;
-      }
       if (m.facing < 0) ctx.scale(-1, 1);
       ctx.drawImage(spr, Math.round(-w / 2), Math.round(-h / 2), w, h);
       ctx.restore();
@@ -2499,51 +2447,20 @@ export class GameEngine {
   }
 
   /**
-   * Draw a hero frame with the frozen tuna rotated around the hand pivot.
-   * Expects ctx already translated to the hero's feet anchor (and mirrored if facing left).
-   * The tuna goes behind the body so the hand covers the grip.
+   * Draw official MapleStory Frozen Tuna (1442039) equipped character frame.
+   * Weapon is baked into the WZ paper-doll (held by the tail).
    */
-  private drawHeroWithTuna(
+  private drawHeroFrame(
     ctx: CanvasRenderingContext2D,
     frame: HTMLCanvasElement,
-    tuna: HTMLCanvasElement,
-    hand: { x: number; y: number },
     scale: number,
-    feetY: number,
-    angle: number,
-    inFront = false
+    feetY: number
   ): void {
-    const sheet = this.sprites.heroSheet;
     const w = Math.round(frame.width * scale);
     const h = Math.round(frame.height * scale);
     const left = Math.round(-w / 2);
     const top = Math.round(feetY - h);
-    const hx = left + hand.x * scale;
-    const hy = top + hand.y * scale;
-
-    if (inFront) ctx.drawImage(frame, left, top, w, h);
-
-    ctx.save();
-    ctx.translate(hx, hy);
-    ctx.rotate(angle);
-    ctx.drawImage(
-      tuna,
-      Math.round(-sheet.tunaGrip.x * scale),
-      Math.round(-sheet.tunaGrip.y * scale),
-      tuna.width * scale,
-      tuna.height * scale
-    );
-    ctx.restore();
-
-    if (inFront) {
-      // Fist drawn over the grip so the tuna reads as held
-      ctx.fillStyle = '#24182b';
-      ctx.fillRect(Math.round(hx - 2 * scale), Math.round(hy - 2 * scale), 4 * scale, 4 * scale);
-      ctx.fillStyle = '#ffd8be';
-      ctx.fillRect(Math.round(hx - 1 * scale), Math.round(hy - 1 * scale), 2 * scale, 2 * scale);
-    } else {
-      ctx.drawImage(frame, left, top, w, h);
-    }
+    ctx.drawImage(frame, left, top, w, h);
   }
 
   private renderPlayer(ctx: CanvasRenderingContext2D): void {
@@ -2567,12 +2484,14 @@ export class GameEngine {
       ctx.restore();
     }
 
-    // Hero head top sits ~56px above the feet; HP bar & LEVEL UP text anchor off this
-    const drawH = 52;
+    // Official tuna stand2 is ~82px tall — DRAW_SCALE keeps hero near normal mob height
+    const unitScale = CONFIG.PLAYER.DRAW_SCALE;
+    const feetY = 12;
+    const drawH = Math.round(this.sprites.heroSheet.baseHeight * unitScale);
     // Shadow
     ctx.fillStyle = 'rgba(20, 40, 20, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y + 24, 17, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y + feetY, 14, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (!blinkHide) {
@@ -2581,45 +2500,25 @@ export class GameEngine {
 
       {
         const sheet = this.sprites.heroSheet;
-        const unitScale = 2; // integer scale keeps hero pixels crisp
         const isFlash = p.invulnTimer > 0.28;
         let frame: HTMLCanvasElement;
         if (p.fishSwingTimer > 0) {
-          frame = isFlash ? sheet.swingFlash : sheet.swing;
+          const u = 1 - p.fishSwingTimer / p.fishSwingDuration;
+          const idx = Math.min(
+            sheet.swingFrames.length - 1,
+            Math.floor(u * sheet.swingFrames.length)
+          );
+          frame = isFlash ? sheet.swingFlashFrames[idx] : sheet.swingFrames[idx];
         } else if (p.isMoving) {
           const walkIdx = Math.floor(p.walkTime * 0.8) % sheet.walk.length;
           frame = isFlash ? sheet.walkFlash[walkIdx] : sheet.walk[walkIdx];
         } else {
-          frame = isFlash ? sheet.idleFlash : sheet.idle;
+          const idleIdx = Math.floor(p.walkTime * 0.4) % sheet.idleFrames.length;
+          frame = isFlash ? sheet.idleFlashFrames[idleIdx] : sheet.idleFrames[idleIdx];
         }
 
-        // Tuna angle (radians, facing right; positive = clockwise / downward)
-        let tunaAngle: number;
-        const swinging = p.fishSwingTimer > 0;
-        if (swinging) {
-          const u = 1 - p.fishSwingTimer / p.fishSwingDuration;
-          const e = 1 - Math.pow(1 - u, 3); // fast start, soft follow-through
-          const start = -1.6; // raised straight overhead
-          const end = p.fishSwingSpin ? start + Math.PI * 2 : 1.0; // full spin or down-forward
-          tunaAngle = start + (end - start) * e;
-        } else if (p.isMoving) {
-          tunaAngle = -0.35 + Math.sin(p.walkTime * 1.6) * 0.12;
-        } else {
-          tunaAngle = -0.35 + Math.sin(p.walkTime * 0.8) * 0.04;
-        }
-
-        // All sheet frames are normalized to face RIGHT (+1); flip when facing LEFT (-1)
         if (p.facing < 0) ctx.scale(-1, 1);
-        this.drawHeroWithTuna(
-          ctx,
-          frame,
-          isFlash ? sheet.tunaFlash : sheet.tuna,
-          swinging ? sheet.handSwing : sheet.handIdle,
-          unitScale,
-          24,
-          tunaAngle,
-          swinging
-        );
+        this.drawHeroFrame(ctx, frame, unitScale, feetY);
       }
 
       ctx.restore();
@@ -2784,14 +2683,6 @@ export class GameEngine {
         ctx.beginPath();
         ctx.arc(-r * 0.25, -r * 0.25, r * 0.38, 0, Math.PI * 2);
         ctx.fill();
-      } else if (p.style === 'arrow' || p.style === 'arrow_rain') {
-        ctx.rotate(Math.atan2(p.vy, p.vx));
-        ctx.fillStyle = '#24182b';
-        ctx.fillRect(-13, -3, 24, 6);
-        ctx.fillStyle = p.evolved ? '#4ade80' : '#f8fafc';
-        ctx.fillRect(-11, -1.5, 19, 3);
-        ctx.fillStyle = p.evolved ? '#fde047' : '#94a3b8';
-        ctx.fillRect(6, -4, 6, 8);
       } else if (p.style === 'sword_wave') {
         ctx.rotate(Math.atan2(p.vy, p.vx));
         ctx.strokeStyle = '#38bdf8';

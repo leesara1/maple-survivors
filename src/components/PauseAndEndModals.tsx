@@ -132,7 +132,7 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
             victory ? 'text-amber-300' : 'text-rose-400'
           }`}
         >
-          {victory ? '전설의 냉동참치 용사! (CLEAR)' : '게임 오버'}
+          {victory ? '전설의 메이플 용사! (CLEAR)' : '게임 오버'}
         </h2>
 
         {/* Key Run Results */}
